@@ -53,13 +53,14 @@ kbd{font:11px ui-monospace,monospace;border:1px solid var(--ln);border-radius:4p
 .bx{background:var(--pn);border:1px solid var(--er);border-radius:12px;padding:18px;max-width:380px}
 .bx h3{margin:0 0 6px;font-size:15px}.bx p{margin:0 0 14px}.bx div{display:flex;gap:8px;justify-content:flex-end}
 #yes{border-color:var(--er);color:var(--er)}
+#sys{width:100%;height:290px;display:block;margin-top:8px;border:1px solid var(--ln);border-radius:8px;cursor:grab;touch-action:pan-y}.tb{display:flex;gap:6px;align-items:center;margin-top:12px}.tb button{padding:2px 10px}select{font:inherit;color:inherit;background:var(--pn);border:1px solid var(--ln);border-radius:6px;padding:3px 6px}
 </style></head><body>
 <div id="app">
 <header id="H"><h1>Deep space command console</h1>
  <div class="m">Real <b id="cr"></b> · Simulated <b id="cs"></b> <span id="cu"></span></div>
- <label class="m">Time warp <input id="w" type="range" min="0" max="5" value="4"> <b id="wv"></b></label></header>
+ <select id="lg" aria-label="Language"><option>English</option><option>Español</option><option>Français</option></select> <label class="m">Time warp <input id="w" type="range" min="0" max="5" value="4"> <b id="wv"></b></label></header>
 <section class="pn" id="L"><h2>Probe</h2><div class="sel" id="sel"></div><h2>Status</h2><dl id="st"></dl><small>* last value reported by the probe</small><h2 style="margin-top:12px">Instruments carried</h2><ul id="in"></ul></section>
-<section class="pn" id="C"><h2>Commands</h2><div class="grid" id="cm"></div><p id="hint"></p><p class="m">Keys: 1–4 select probe · letter on each button sends it · [ and ] change time warp · Enter / Esc answer confirmations</p></section>
+<section class="pn" id="C"><h2>Commands</h2><div class="grid" id="cm"></div><p id="hint"></p><div class="tb"><b>Solar system</b><button id="b2">2D</button><button id="b3">3D</button><small>(square-root scale)</small></div><canvas id="sys"></canvas><p class="m">Keys: 1–7 select probe · letter on each button sends it · [ and ] change time warp · Enter / Esc answer confirmations</p></section>
 <section class="pn" id="R"><h2>Mission log</h2><div id="log" aria-live="polite"></div></section>
 <section class="pn" id="T"><h2 id="th"></h2>
  <div id="lane"><span class="nd"></span><span class="nd p"></span><span class="lb" style="left:0">Earth</span><span class="lb" style="left:100%" id="pn"></span><div id="pl"></div></div>
@@ -104,7 +105,19 @@ const PROBES=[
  cmd:{mag:{i:"MAG",r:[["|B|",70,900,"nT",0],["Bφ",-80,80,"nT",0]]},
   plasma:{i:"JADE",r:[["Electron density",.01,30,"cm⁻³",2],["Ion bulk speed",100,420,"km/s",0]]},
   rad:{i:"JEDI",r:[["Dose rate (shielded)",.02,2.5,"krad/h",2],["Electron flux >1 MeV",1e4,8e6,"cm⁻²s⁻¹",0]]},
-  img:{i:"JunoCam",r:[["Exposure",1,60,"ms",0],["Compressed size",300,1800,"kB",0]]}}}
+  img:{i:"JunoCam",r:[["Exposure",1,60,"ms",0],["Compressed size",300,1800,"kB",0]]}}},
+{id:'lro',name:'LRO (Moon)',orb:1,status:'Lunar polar orbit, extended mission',
+ bus:{T:[10,30],P:[1100,1500],W:[600,700]},
+ inst:{LROC:['Lunar Reconnaissance Orbiter Camera',1],LOLA:['Laser altimeter',1],Diviner:['Lunar radiometer',1],LAMP:['Ultraviolet mapping spectrograph',1],CRaTER:['Cosmic ray telescope',1],LEND:['Neutron detector',1]},
+ cmd:{rad:{i:'CRaTER',r:[['Dose rate',.1,.6,'mGy/day',2]]},img:{i:'LROC',r:[['Exposure',.3,3,'ms',1],['Compressed size',800,4000,'kB',0]]},temp:{r:[['Surface temperature',95,390,'K',0],['Bus',10,30,'°C',1]]}}},
+{id:'pe',name:'Perseverance (Mars)',orb:1,status:'Jezero Crater, surface operations',
+ bus:{T:[-40,0],P:[0,0],W:[100,110]},
+ inst:{MEDA:['Weather station',1],'Mastcam-Z':['Zoom camera',1],SuperCam:['Laser spectrometer and camera',1],PIXL:['X-ray spectrometer',1],SHERLOC:['Raman and fluorescence spectrometer',1],MOXIE:['Oxygen experiment',1],RIMFAX:['Ground-penetrating radar',1]},
+ cmd:{temp:{r:[['Air temperature',-85,-5,'°C',1],['Ground temperature',-75,10,'°C',1]]},press:{r:[['Air pressure',600,780,'Pa',0]]},rad:{i:'MEDA',r:[['Surface dose rate',.2,.3,'mGy/day',2]]},img:{i:'Mastcam-Z',r:[['Exposure',5,400,'ms',0],['Compressed size',300,2400,'kB',0]]}}},
+{id:'pk',name:'Parker Solar Probe',orb:1,status:'Solar orbit, close perihelion passes',
+ bus:{T:[18,32],P:[1000,1400],W:[340,390]},
+ inst:{FIELDS:['Electric and magnetic fields',1],SWEAP:['Solar wind electrons, alphas, protons',1],WISPR:['Wide-field imager',1],ISOIS:['Energetic particle suite',1]},
+ cmd:{mag:{i:'FIELDS',r:[['|B|',20,2000,'nT',0],['Bz',-500,500,'nT',0]]},plasma:{i:'SWEAP',r:[['Proton density',50,3000,'cm⁻³',0],['Solar wind speed',250,700,'km/s',0]]},rad:{i:'ISOIS',r:[['Energetic ion flux',1,900,'cm⁻²s⁻¹sr⁻¹',1]]},img:{i:'WISPR',r:[['Exposure',.5,12,'s',1],['Compressed size',400,2200,'kB',0]]},temp:{r:[['Heat shield (sunward)',120,1370,'°C',0],['Bus (shaded)',18,32,'°C',1]]}}}
 ];
 const COMMANDS=[
 {id:"mag",key:"M",label:"Magnetic field",sci:1,t:[3,9],tip:"Read the magnetometer: field magnitude and one vector component."},
@@ -130,45 +143,70 @@ const F=(v,d=2)=>Math.abs(v)>=1e5?v.toExponential(2):v.toFixed(d),any=a=>a[Math.
 const num=(v,d=0)=>v.toLocaleString("en-US",{maximumFractionDigits:d,minimumFractionDigits:d});
 const dur=s=>{s=Math.max(0,s);if(s<60)return s.toFixed(1)+"s";const h=s/3600|0,m=s%3600/60|0;return(h?h+"h "+pad(m)+"m ":m+"m ")+pad(s%60)+"s"};
 const hms=t=>new Date(t).toISOString().slice(11,19);
-const au=(p,t)=>p.orb?Math.sqrt(28.04-10.4*Math.cos((t-JUP_OPP)/DAY/398.9*6.2832)):p.au0+p.kms*86400/AUKM*(t-EPOCH)/DAY;
+/* Heliocentric model (AU): circular Earth/Mars/Jupiter, rough Parker orbit, fixed headings for deep probes */
+const pol=(r,a,z=0)=>[r*Math.cos(a),r*Math.sin(a),z],dg=Math.PI/180,dy=t=>(t-JUP_OPP)/DAY;
+const E=t=>pol(1,(110+dy(t)*.98565)*dg),POS={v1:[256,35],v2:[290,-48],nh:[295,3]};
+function hel(p,t){const q=p.id;
+ if(q=='ju')return pol(5.2,(110+dy(t)*.0831)*dg);if(q=='pe')return pol(1.524,(290+dy(t)*.52408)*dg);if(q=='lro')return E(t);
+ if(q=='pk'){const a=dy(t)*6.2832/88;return pol(.388-.342*Math.cos(a),a+1)}
+ const[o,b]=POS[q],r=au(p,t);return pol(r*Math.cos(b*dg),o*dg,r*Math.sin(b*dg))}
+const au=(p,t)=>p.id=='lro'?(384400+21000*Math.cos(dy(t)/27.55*6.2832))/AUKM:p.orb?Math.hypot(...hel(p,t).map((v,i)=>v-E(t)[i])):p.au0+p.kms*86400/AUKM*(t-EPOCH)/DAY;
+/* Languages: English text is the key; TR holds [Spanish, French]. Placeholders {0}, {1}... */
+let LG=({es:1,fr:2})[(navigator.language||'en').slice(0,2)]||0;
+const TR={'Deep space command console':['Consola de comando del espacio profundo','Console de commande de l’espace lointain'],'Real':['Real','Réel'],'Simulated':['Simulado','Simulé'],'Time warp':['Distorsión temporal','Accélération du temps'],'Probe':['Sonda','Sonde'],'Status':['Estado','État'],'* last value reported by the probe':['* último valor informado por la sonda','* dernière valeur transmise par la sonde'],'Instruments carried':['Instrumentos a bordo','Instruments embarqués'],'Commands':['Comandos','Commandes'],'Mission log':['Registro de misión','Journal de mission'],'Solar system':['Sistema solar','Système solaire'],'(square-root scale)':['(escala de raíz cuadrada)','(échelle racine carrée)'],
+'Keys: 1–7 select probe · letter on each button sends it · [ and ] change time warp · Enter / Esc answer confirmations':['Teclas: 1–7 elegir sonda · la letra de cada botón lo envía · [ y ] cambian la distorsión temporal · Enter / Esc responden confirmaciones','Touches : 1–7 choisir la sonde · la lettre de chaque bouton l’envoie · [ et ] changent l’accélération · Entrée / Échap répondent aux confirmations'],
+'Confirm:':['Confirmar:','Confirmer :'],'Cancel (Esc)':['Cancelar (Esc)','Annuler (Échap)'],'Send (Enter)':['Enviar (Enter)','Envoyer (Entrée)'],'Earth':['Tierra','Terre'],'Mars':['Marte','Mars'],'Jupiter':['Júpiter','Jupiter'],
+'Distance':['Distancia','Distance'],'One-way delay':['Retardo de ida','Délai aller'],'Round trip':['Ida y vuelta','Aller-retour'],'round trip':['ida y vuelta','aller-retour'],'Range rate':['Velocidad radial','Vitesse radiale'],'Bus power *':['Potencia del bus *','Puissance du bus *'],'Pointing error *':['Error de apuntado *','Erreur de pointage *'],'SAFE MODE':['MODO SEGURO','MODE SÉCURITÉ'],' · offline':[' · fuera de línea',' · hors ligne'],
+'Interstellar space, reduced instruments':['Espacio interestelar, instrumentos reducidos','Espace interstellaire, instruments réduits'],'Kuiper Belt cruise, extended mission':['Crucero por el cinturón de Kuiper, misión extendida','Croisière dans la ceinture de Kuiper, mission étendue'],'Jupiter orbit, extended mission':['Órbita de Júpiter, misión extendida','Orbite de Jupiter, mission étendue'],'Lunar polar orbit, extended mission':['Órbita polar lunar, misión extendida','Orbite polaire lunaire, mission étendue'],'Jezero Crater, surface operations':['Cráter Jezero, operaciones en superficie','Cratère Jezero, opérations en surface'],'Solar orbit, close perihelion passes':['Órbita solar, pasos cercanos al perihelio','Orbite solaire, passages proches du périhélie'],
+'Hover or focus a command to see what it does.':['Pasa el cursor o enfoca un comando para ver qué hace.','Survolez ou sélectionnez une commande pour voir son effet.'],' Not available on {0}: no working instrument for it.':[' No disponible en {0}: no hay instrumento operativo para ello.',' Indisponible sur {0} : aucun instrument opérationnel.'],
+'Earth ↔ {0}: one-way {1}, round trip {2} (transit only)':['Tierra ↔ {0}: ida {1}, ida y vuelta {2} (solo tránsito)','Terre ↔ {0} : aller {1}, aller-retour {2} (transit seul)'],'Uplink':['Subida','Liaison montante'],'Executing':['Ejecutando','Exécution'],'Downlink':['Bajada','Liaison descendante'],'real':['real','réel'],'No commands in flight. Send one and watch the pulse travel.':['No hay comandos en vuelo. Envía uno y mira viajar el pulso.','Aucune commande en transit. Envoyez-en une et suivez l’impulsion.'],
+'#{0} ▶ {1} · {2} sent. Uplink takes {3}.':['#{0} ▶ {1} · {2} enviado. La subida tarda {3}.','#{0} ▶ {1} · {2} envoyé. La montée prend {3}.'],'#{0} {1} received the command and is executing.':['#{0} {1} recibió el comando y lo está ejecutando.','#{0} {1} a reçu la commande et l’exécute.'],'#{0} {1} replied. Downlink takes {2}.':['#{0} {1} respondió. La bajada tarda {2}.','#{0} {1} a répondu. La descente prend {2}.'],
+'Console online. Light covers 1 AU in about 8m 19s, so every command waits for its uplink and downlink.':['Consola en línea. La luz recorre 1 UA en unos 8m 19s, así que cada comando espera su subida y su bajada.','Console en ligne. La lumière parcourt 1 UA en 8 min 19 s environ : chaque commande attend sa montée et sa descente.'],'Pick a probe, send a command, and raise the time warp to skip the wait. Queue as many as you like.':['Elige una sonda, envía un comando y sube la distorsión temporal para saltar la espera. Encola los que quieras.','Choisissez une sonde, envoyez une commande et augmentez l’accélération pour éviter l’attente. Mettez-en autant que vous voulez en file.'],
+'Magnetic field':['Campo magnético','Champ magnétique'],'Plasma / particle flux':['Plasma / flujo de partículas','Plasma / flux de particules'],'Temperature':['Temperatura','Température'],'Radiation / dust':['Radiación / polvo','Rayonnement / poussière'],'Tank pressure':['Presión del tanque','Pression du réservoir'],'Take image':['Tomar imagen','Prendre une image'],'Run diagnostics':['Ejecutar diagnóstico','Lancer le diagnostic'],'Check power levels':['Revisar energía','Vérifier l’énergie'],'Adjust antenna':['Ajustar antena','Orienter l’antenne'],'Enter safe mode':['Entrar en modo seguro','Passer en mode sécurité'],'Reboot flight computer':['Reiniciar computadora de vuelo','Redémarrer l’ordinateur de bord'],
+'Read the magnetometer: field magnitude and one vector component.':['Lee el magnetómetro: magnitud del campo y una componente vectorial.','Lit le magnétomètre : intensité du champ et une composante vectorielle.'],'Measure plasma density, speed and energetic particle flux.':['Mide la densidad y velocidad del plasma y el flujo de partículas energéticas.','Mesure la densité et la vitesse du plasma et le flux de particules énergétiques.'],'Read thermistors on the spacecraft bus and instrument bay.':['Lee los termistores del bus y de la bahía de instrumentos.','Lit les thermistances du bus et de la baie d’instruments.'],'Cosmic-ray, radiation dose or dust-impact counters, depending on the probe.':['Contadores de rayos cósmicos, dosis de radiación o impactos de polvo, según la sonda.','Compteurs de rayons cosmiques, de dose ou d’impacts de poussière, selon la sonde.'],'Read propellant tank pressure, the one pressure a probe can report.':['Lee la presión del tanque de propelente, la única presión que una sonda puede informar.','Lit la pression du réservoir d’ergols, la seule pression qu’une sonde peut transmettre.'],'Capture and compress one frame, if a working camera is still aboard.':['Captura y comprime una imagen, si aún queda una cámara operativa.','Capture et compresse une image, si une caméra fonctionne encore.'],'Self-test of flight computer, attitude control, receiver and thrusters.':['Autotest de la computadora, el control de actitud, el receptor y los propulsores.','Autotest de l’ordinateur, du contrôle d’attitude, du récepteur et des propulseurs.'],'Read bus power, voltage and load margin.':['Lee la potencia, el voltaje y el margen de carga del bus.','Lit la puissance, la tension et la marge de charge du bus.'],'Re-point the high-gain antenna to reduce pointing error. Risky.':['Reorienta la antena de alta ganancia para reducir el error de apuntado. Arriesgado.','Réoriente l’antenne à grand gain pour réduire l’erreur de pointage. Risqué.'],'Shed non-essential loads and inhibit science. Dangerous.':['Desconecta cargas no esenciales e inhibe la ciencia. Peligroso.','Coupe les charges non essentielles et inhibe la science. Dangereux.'],'Restart the command computer. Also exits safe mode. Dangerous.':['Reinicia la computadora de comandos. También sale del modo seguro. Peligroso.','Redémarre l’ordinateur de commande. Sort aussi du mode sécurité. Dangereux.'],
+'A bad slew can drop the signal for hours or days, and every correction costs a full round trip. Send anyway?':['Un mal giro puede perder la señal por horas o días, y cada corrección cuesta un viaje de ida y vuelta. ¿Enviar igual?','Un mauvais pointage peut couper le signal des heures ou des jours, et chaque correction coûte un aller-retour. Envoyer quand même ?'],'The probe will shed loads and stop all science until you send a reboot. Send anyway?':['La sonda apagará cargas y detendrá toda la ciencia hasta que envíes un reinicio. ¿Enviar igual?','La sonde coupera ses charges et arrêtera toute science jusqu’à un redémarrage. Envoyer quand même ?'],'A failed restart can leave the probe in safe mode, and the result takes a full round trip to arrive. Send anyway?':['Un reinicio fallido puede dejar la sonda en modo seguro, y el resultado tarda un viaje completo en llegar. ¿Enviar igual?','Un redémarrage raté peut laisser la sonde en mode sécurité, et le résultat met un aller-retour à arriver. Envoyer quand même ?'],
+'COMMAND FAILED':['COMANDO FALLIDO','ÉCHEC DE LA COMMANDE'],'PACKET LOSS':['PÉRDIDA DE PAQUETES','PERTE DE PAQUETS'],'OVERSHOOT':['SOBREPASO','DÉPASSEMENT'],'REBOOT FAULT':['FALLO DE REINICIO','ÉCHEC DU REDÉMARRAGE'],'DEGRADED':['DEGRADADO','DÉGRADÉ'],
+'Rejected: spacecraft is in SAFE MODE (science inhibited). Send a reboot to resume.':['Rechazado: la nave está en MODO SEGURO (ciencia inhibida). Envía un reinicio para reanudar.','Rejeté : la sonde est en MODE SÉCURITÉ (science inhibée). Envoyez un redémarrage pour reprendre.'],'No suitable instrument aboard {0}.':['{0} no lleva un instrumento adecuado.','Aucun instrument adapté à bord de {0}.'],'{0} is OFFLINE ({1}).':['{0} está FUERA DE LÍNEA ({1}).','{0} est HORS LIGNE ({1}).'],'Downlink frames failed error correction. No data recovered.':['Las tramas de bajada fallaron la corrección de errores. No se recuperaron datos.','Les trames descendantes ont échoué à la correction d’erreurs. Aucune donnée récupérée.'],'Low power: load-shed inhibited instrument turn-on.':['Poca energía: el recorte de cargas impidió encender el instrumento.','Énergie faible : le délestage a empêché l’allumage de l’instrument.'],'Instrument fault: no valid data. Retry suggested.':['Fallo del instrumento: sin datos válidos. Se sugiere reintentar.','Panne d’instrument : aucune donnée valide. Réessayer.'],'Frame compressed and stored; thumbnail not simulated.':['Imagen comprimida y guardada; miniatura no simulada.','Image compressée et stockée ; vignette non simulée.'],'Slew overshoot: about 3 dB signal loss. Corrective slew advised.':['Giro excesivo: pérdida de señal de unos 3 dB. Se aconseja corregir.','Dépassement : perte de signal d’environ 3 dB. Correction conseillée.'],'Already in SAFE MODE.':['Ya está en MODO SEGURO.','Déjà en MODE SÉCURITÉ.'],'Non-essential loads shed; science inhibited.':['Cargas no esenciales apagadas; ciencia inhibida.','Charges non essentielles coupées ; science inhibée.'],'Memory fault on restart. Probe came up in SAFE MODE.':['Fallo de memoria al reiniciar. La sonda arrancó en MODO SEGURO.','Erreur mémoire au redémarrage. La sonde a démarré en MODE SÉCURITÉ.'],'Flight computer restarted; science re-enabled.':['Computadora reiniciada; ciencia reactivada.','Ordinateur redémarré ; science réactivée.'],
+'Flight computer':['Computadora de vuelo','Ordinateur de bord'],'Attitude control':['Control de actitud','Contrôle d’attitude'],'Receiver lock':['Enganche del receptor','Verrouillage du récepteur'],'Thrusters':['Propulsores','Propulseurs'],'Instrument bay':['Bahía de instrumentos','Baie d’instruments'],'Bus power':['Potencia del bus','Puissance du bus'],'Bus voltage':['Voltaje del bus','Tension du bus'],'Load margin':['Margen de carga','Marge de charge'],'Pointing error':['Error de apuntado','Erreur de pointage'],'Exposure':['Exposición','Exposition'],'Compressed size':['Tamaño comprimido','Taille compressée'],'Electron density':['Densidad electrónica','Densité électronique'],'Air temperature':['Temperatura del aire','Température de l’air'],'Air pressure':['Presión del aire','Pression de l’air']};
+const t=(s,...a)=>{let r=(TR[s]&&TR[s][LG-1])||s;a.forEach((v,i)=>r=r.replace('{'+i+'}',v));return r};
 const lt=(p,t)=>au(p,t)*AUKM/C*1e3;           /* one-way light time, ms */
 const cmdOf=id=>COMMANDS.find(c=>c.id==id),P=()=>PROBES[sel];
 const unavail=(p,c)=>c.sci&&(!p.cmd[c.id]||!p.inst[p.cmd[c.id].i][1]);
-const reads=r=>r.map(([l,a,b,u,d])=>[l,F(R(a,b),d),u]);
+const reads=r=>r.map(([l,a,b,u,d])=>[t(l),F(R(a,b),d),u]);
 
 /* Runs on the probe when the command arrives; returns what it will downlink. */
 function execute(p,c){
- const bus=p.bus,k=p.cmd[c.id],err=m=>({t:"er",h:"COMMAND FAILED",m}),ok=(lines,fx,m)=>({t:"rx",h:"OK",lines,fx,m});
+ const bus=p.bus,k=p.cmd[c.id],err=(m,...a)=>({t:'er',h:t('COMMAND FAILED'),m:t(m,...a)}),ok=(lines,fx,m)=>({t:'rx',h:'OK',lines,fx,m:m&&t(m)});
  if(p.rt.safe&&c.sci)return err("Rejected: spacecraft is in SAFE MODE (science inhibited). Send a reboot to resume.");
- if(c.sci){if(!k)return err("No suitable instrument aboard "+p.name+".");if(!p.inst[k.i][1])return err(k.i+" is OFFLINE ("+p.inst[k.i][0]+").")}
+ if(c.sci){if(!k)return err('No suitable instrument aboard {0}.',p.name);if(!p.inst[k.i][1])return err('{0} is OFFLINE ({1}).',k.i,p.inst[k.i][0])}
  const x=Math.random();
- if(x<.06)return{t:"er",h:"PACKET LOSS",m:"Downlink frames failed error correction. No data recovered."};
+ if(x<.06)return{t:'er',h:t('PACKET LOSS'),m:t('Downlink frames failed error correction. No data recovered.')};
  if(c.sci&&x<.1)return err("Low power: load-shed inhibited instrument turn-on.");
  if(c.sci&&x<.13)return err("Instrument fault: no valid data. Retry suggested.");
  switch(c.id){
   case"mag":case"plasma":case"rad":case"img":return ok(reads(k.r),0,c.id=="img"?"Frame compressed and stored; thumbnail not simulated.":"");
-  case"temp":return ok(reads([["Bus",...bus.T,"°C",1],["Instrument bay",bus.T[0]+4,bus.T[1]+4,"°C",1]]));
-  case"press":return ok(reads([["Tank pressure",...bus.P,"kPa",0]]));
-  case"power":{const w=R(...bus.W);return ok([["Bus power",F(w,1),"W"],["Bus voltage",F(R(27.2,29.8)),"V"],["Load margin",F(R(1,14),1),"W"]],{pw:w})}
-  case"diag":return ok(["Flight computer","Attitude control","Receiver lock","Thrusters"].map(s=>[s,any(["NOMINAL","NOMINAL","NOMINAL","NOMINAL","DEGRADED"]),""]));
+  case'temp':return ok(reads(k&&k.r?k.r:[['Bus',...bus.T,'°C',1],['Instrument bay',bus.T[0]+4,bus.T[1]+4,'°C',1]]));
+  case'press':return ok(reads(k&&k.r?k.r:[['Tank pressure',...bus.P,'kPa',0]]));
+  case"power":{const w=R(...bus.W);return ok([[t('Bus power'),F(w,1),'W'],[t('Bus voltage'),F(R(27.2,29.8)),'V'],[t('Load margin'),F(R(1,14),1),'W']],{pw:w})}
+  case"diag":return ok(["Flight computer","Attitude control","Receiver lock","Thrusters"].map(s=>[t(s),t(any(['NOMINAL','NOMINAL','NOMINAL','NOMINAL','DEGRADED'])),'']));
   case"ant":{const bad=Math.random()<.15,np=bad?R(.3,.6):R(.003,.02);
-   return{t:bad?"er":"rx",h:bad?"OVERSHOOT":"OK",lines:[["Pointing error",F(p.rt.pt,3)+" → "+F(np,3),"°"]],fx:{pt:np},m:bad?"Slew overshoot: about 3 dB signal loss. Corrective slew advised.":""}}
+   return{t:bad?'er':'rx',h:bad?t('OVERSHOOT'):'OK',lines:[[t('Pointing error'),F(p.rt.pt,3)+' → '+F(np,3),'°']],fx:{pt:np},m:bad?t('Slew overshoot: about 3 dB signal loss. Corrective slew advised.'):''}}
   case"safe":return p.rt.safe?err("Already in SAFE MODE."):ok([["Mode","SAFE",""]],{safe:1},"Non-essential loads shed; science inhibited.");
-  case"reboot":return Math.random()<.15?{t:"er",h:"REBOOT FAULT",m:"Memory fault on restart. Probe came up in SAFE MODE.",fx:{safe:1}}:ok([["Mode","NOMINAL",""]],{safe:0},"Flight computer restarted; science re-enabled.");
+  case"reboot":return Math.random()<.15?{t:'er',h:t('REBOOT FAULT'),m:t('Memory fault on restart. Probe came up in SAFE MODE.'),fx:{safe:1}}:ok([["Mode","NOMINAL",""]],{safe:0},"Flight computer restarted; science re-enabled.");
  }
 }
 function go(c,p){
  const up=lt(p,sim),m={n:++seq,p,c,t0:sim,up,ph:0,tUp:sim+up,ex:R(...c.t)*1e3};
  m.tEx=m.tUp+m.ex;Q.push(m);
- log("tx",`#${m.n} ▶ ${p.name} · ${c.label} sent. Uplink takes ${dur(up/1e3)}.`);
+ log('tx',t('#{0} ▶ {1} · {2} sent. Uplink takes {3}.',m.n,p.name,t(c.label),dur(up/1e3)));
 }
 function step(){ /* advance every in-flight command through uplink → execute → downlink */
  for(const m of Q){
-  if(m.ph==0&&sim>=m.tUp){m.ph=1;log("tr",`#${m.n} ${m.p.name} received the command and is executing.`,m.tUp)}
+  if(m.ph==0&&sim>=m.tUp){m.ph=1;log('tr',t('#{0} {1} received the command and is executing.',m.n,m.p.name),m.tUp)}
   if(m.ph==1&&sim>=m.tEx){m.res=execute(m.p,m.c);Object.assign(m.p.rt,m.res.fx);m.dn=lt(m.p,m.tEx);m.tDn=m.tEx+m.dn;m.ph=2;
-   log("tr",`#${m.n} ${m.p.name} replied. Downlink takes ${dur(m.dn/1e3)}.`,m.tEx)}
+   log('tr',t('#{0} {1} replied. Downlink takes {2}.',m.n,m.p.name,dur(m.dn/1e3)),m.tEx)}
   if(m.ph==2&&sim>=m.tDn){m.ph=3;const r=m.res;Object.assign(m.p.kn,r.fx);
-   let s=`<b>#${m.n} ◀ ${m.p.name} · ${m.c.label} · ${r.h}</b> (round trip ${dur((m.tDn-m.t0)/1e3)})`;
+   let s=`<b>#${m.n} ◀ ${m.p.name} · ${t(m.c.label)} · ${r.h}</b> (${t('round trip')} ${dur((m.tDn-m.t0)/1e3)})`;
    if(r.lines)s+="\n"+r.lines.map(([l,v,u])=>"   "+l.padEnd(20)+v+" "+u).join("\n");
    if(r.m)s+="\n   "+r.m;log(r.t,s,m.tDn)}
  }
@@ -180,17 +218,20 @@ function step(){ /* advance every in-flight command through uplink → execute �
    ===================================================================== */
 function log(cls,txt,t=sim){const e=document.createElement("div"),L=$("log");e.className="e "+cls;e.innerHTML=hms(t)+"  "+txt;L.append(e);
  while(L.children.length>300)L.firstChild.remove();L.scrollTop=1e9}
+const TN=[],DY=new Set(['st','in','q','log','cm','sel','hint','pn','th','cu','wv','cr','cs']);
+{const w=document.createTreeWalker(document.body,4);let n;while(n=w.nextNode()){const k=n.nodeValue.trim();if(k&&!DY.has(n.parentElement.id)&&n.parentElement.tagName!='SCRIPT')TN.push([n,n.nodeValue,k])}}
+function xl(){TN.forEach(([n,o,k])=>n.nodeValue=o.replace(k,t(k)));document.documentElement.lang=['en','es','fr'][LG];buildCm();choose(sel)}
 $("sel").innerHTML=PROBES.map((p,i)=>`<button data-i="${i}"><b>${p.name}</b><small id="sd${i}"></small></button>`).join("");
-$("cm").innerHTML=COMMANDS.map(c=>`<button class="cmd ${c.danger?"dgr":""}" data-c="${c.id}" title="${c.tip}"><span>${c.label}</span><kbd>${c.key}</kbd></button>`).join("");
-function choose(i){sel=i;[...$("sel").children].forEach((b,j)=>b.classList.toggle("on",i==j));$("hint").textContent="Hover or focus a command to see what it does.";
+const buildCm=()=>$('cm').innerHTML=COMMANDS.map(c=>`<button class="cmd ${c.danger?'dgr':''}" data-c="${c.id}" title="${t(c.tip)}"><span>${t(c.label)}</span><kbd>${c.key}</kbd></button>`).join('');
+function choose(i){sel=i;[...$("sel").children].forEach((b,j)=>b.classList.toggle("on",i==j));$('hint').textContent=t('Hover or focus a command to see what it does.');
  $("pn").textContent=P().name;ui()}
-function send(id){const c=cmdOf(id);if(c.danger){pend=[c,P()];$("ovt").textContent=c.label+" → "+P().name;$("ovp").textContent=c.danger;$("ov").hidden=false}else go(c,P())}
+function send(id){const c=cmdOf(id);if(c.danger){pend=[c,P()];$('ovt').textContent=t(c.label)+' → '+P().name;$('ovp').textContent=t(c.danger);$("ov").hidden=false}else go(c,P())}
 const closeOv=()=>{$("ov").hidden=true},yes=()=>{closeOv();go(...pend)};
 $("yes").onclick=yes;$("no").onclick=closeOv;
 $("sel").onclick=e=>{const b=e.target.closest("button");if(b)choose(+b.dataset.i)};
 $("cm").onclick=e=>{const b=e.target.closest("button");if(b)send(b.dataset.c)};
 $("cm").onmouseover=$("cm").onfocusin=e=>{const b=e.target.closest("button");if(!b)return;const c=cmdOf(b.dataset.c);
- $("hint").textContent=c.tip+(unavail(P(),c)?" Not available on "+P().name+": no working instrument for it.":"")};
+ $('hint').textContent=t(c.tip)+(unavail(P(),c)?t(' Not available on {0}: no working instrument for it.',P().name):'')};
 $("w").oninput=()=>{warp=WARPS[$("w").value];ui()};
 addEventListener("keydown",e=>{
  if(!$("ov").hidden){if(e.key=="Escape")closeOv();if(e.key=="Enter"){e.preventDefault();yes()}return}
@@ -206,25 +247,40 @@ function ui(){
  $("cu").textContent="("+new Date(sim).toISOString().slice(0,16).replace("T"," ")+" UTC)";
  $("wv").textContent=num(warp)+"× (1 s = "+dur(warp)+")";
  PROBES.forEach((q,i)=>$("sd"+i).textContent=num(au(q,sim),1)+" AU · "+dur(lt(q,sim)/1e3).split(" ").slice(0,2).join(" "));
- const row=(k,v)=>`<dt>${k}</dt><dd>${v}</dd>`;
- $("st").innerHTML=row("Status",p.kn.safe?'<span style="color:var(--er)">SAFE MODE</span>':p.status)+row("Distance",num(a,3)+" AU")+row("",num(a*AUKM)+" km")
+ const row=(k,v)=>`<dt>${t(k)}</dt><dd>${v}</dd>`;
+ $("st").innerHTML=row("Status",p.kn.safe?'<span style="color:var(--er)">'+t('SAFE MODE')+'</span>':t(p.status))+row("Distance",num(a,3)+" AU")+row("",num(a*AUKM)+" km")
   +row("One-way delay",dur(l))+row("Round trip",dur(2*l))+row("Range rate",(rr>=0?"+":"")+rr.toFixed(2)+" km/s")
   +row("Bus power *",num(p.kn.pw,1)+" W")+row("Pointing error *",p.kn.pt.toFixed(3)+"°");
- $("in").innerHTML=Object.entries(p.inst).map(([k,[n,on]])=>`<li><span class="o ${on?"":"off"}"></span><b>${k}</b> <small>${n}${on?"":" · offline"}</small></li>`).join("");
+ $("in").innerHTML=Object.entries(p.inst).map(([k,[n,on]])=>`<li><span class="o ${on?"":"off"}"></span><b>${k}</b> <small>${n}${on?'':t(' · offline')}</small></li>`).join("");
  document.querySelectorAll(".cmd").forEach(b=>b.classList.toggle("dim",!!unavail(p,cmdOf(b.dataset.c))));
- $("th").textContent=`Earth ↔ ${p.name}: one-way ${dur(l)}, round trip ${dur(2*l)} (transit only)`;
+ $("th").textContent=t('Earth ↔ {0}: one-way {1}, round trip {2} (transit only)',p.name,dur(l),dur(2*l));
  $("q").innerHTML=Q.length?Q.map(m=>{const end=[m.tUp,m.tEx,m.tDn][m.ph],rem=(end-sim)/1e3,
    tot=m.ph==2?m.tDn-m.t0:(m.ph==0?m.up+m.ex:m.tEx-m.t0)+lt(m.p,sim);
-   return`<div class="qi"><span>#${m.n} ${m.p.name} · ${m.c.label}</span><span><i class="ph${m.ph}">${["Uplink","Executing","Downlink"][m.ph]}</i> ${dur(rem)} sim · ${dur(rem/warp)} real · round trip ≈ ${dur(tot/1e3)}</span></div>`}).join("")
-  :'<span class="m">No commands in flight. Send one and watch the pulse travel.</span>';
+   return`<div class="qi"><span>#${m.n} ${m.p.name} · ${m.c.label}</span><span><i class="ph${m.ph}">${t(['Uplink','Executing','Downlink'][m.ph])}</i> ${dur(rem)} sim · ${dur(rem/warp)} ${t('real')} · ${t('round trip')} ≈ ${dur(tot/1e3)}</span></div>`}).join("")
+  :'<span class="m">'+t('No commands in flight. Send one and watch the pulse travel.')+'</span>';
 }
 function frame(now){
  sim+=Math.min(now-last,250)*warp;last=now;step();
  const p=P();$("pl").innerHTML=Q.filter(m=>m.p===p).map(m=>{
   const x=m.ph==0?Math.min(1,(sim-m.t0)/m.up):m.ph==1?1:1-Math.min(1,(sim-m.tEx)/m.dn);
-  return`<i class="pl ${["u","x","d"][m.ph]}" style="left:${x*100}%"></i>`}).join("");
+  return m.x=x,`<i class="pl ${['u','x','d'][m.ph]}" style="left:${x*100}%"></i>`}).join('');drawSys();
  requestAnimationFrame(frame)}
-choose(0);$("w").oninput();setInterval(ui,250);requestAnimationFrame(frame);
-log("sys","Console online. Light covers 1 AU in about 8m 19s, so every command waits for its uplink and downlink.");
-log("sys","Pick a probe, send a command, and raise the time warp to skip the wait. Queue as many as you like.");
+/* Solar system view: 2D top-down or tilted 3D (drag to rotate); radial sqrt scale */
+let yaw=.6,m3=1,drag=0,lx=0;
+function drawSys(){
+ const cv=$('sys'),g=cv.getContext('2d'),d=devicePixelRatio||1,w=cv.clientWidth,h=cv.clientHeight,S=getComputedStyle(document.documentElement),cl=n=>S.getPropertyValue(n).trim();
+ cv.width=w*d;cv.height=h*d;g.setTransform(d,0,0,d,0,0);if(m3&&!drag)yaw+=.003;
+ const ya=m3?yaw:0,T=m3?1.05:0,Rr=Math.min(w,h)*.46,sq=r=>Math.sqrt(r/180);
+ const pj=v=>{const r=Math.hypot(v[0],v[1])||1e-9,s=sq(r)/r,x=v[0]*s,y=v[1]*s,z=Math.sign(v[2])*sq(Math.abs(v[2])),c=Math.cos(ya),n=Math.sin(ya),x2=x*c-y*n,y2=x*n+y*c,y3=y2*Math.cos(T)-z*Math.sin(T),k=m3?1/(1-(y2*Math.sin(T)+z*Math.cos(T))*.3):1;return[w/2+x2*Rr*k,h/2+y3*Rr*k]};
+ const dot=(v,c,s,lb)=>{const[x,y]=pj(v);g.fillStyle=c;g.beginPath();g.arc(x,y,s,0,6.3);g.fill();if(lb){g.fillStyle=cl('--mu');g.font='11px system-ui';g.fillText(lb,x+s+3,y+3)}return[x,y]};
+ g.strokeStyle=cl('--ln');[1,1.524,5.2,9.58,19.2,30.1].forEach(r=>{g.beginPath();for(let i=0;i<=64;i++){const[x,y]=pj(pol(r,i/64*6.2832));i?g.lineTo(x,y):g.moveTo(x,y)}g.stroke()});
+ dot([0,0,0],'#ffc844',5);dot(E(sim),cl('--ac'),3,t('Earth'));dot(pol(1.524,(290+dy(sim)*.52408)*dg),cl('--er'),2.5,t('Mars'));dot(pol(5.2,(110+dy(sim)*.0831)*dg),cl('--wn'),3.5,t('Jupiter'));
+ PROBES.forEach((p,i)=>dot(hel(p,sim),i==sel?cl('--ok'):cl('--mu'),i==sel?4:2.5,i==sel?p.name:''));
+ const a=pj(E(sim)),b=pj(hel(P(),sim));g.setLineDash([4,4]);g.strokeStyle=cl('--ok');g.beginPath();g.moveTo(...a);g.lineTo(...b);g.stroke();g.setLineDash([]);
+ Q.filter(m=>m.p===P()).forEach(m=>{g.fillStyle=cl(['--sn','--wn','--ok'][m.ph]);g.beginPath();g.arc(a[0]+(b[0]-a[0])*m.x,a[1]+(b[1]-a[1])*m.x,4,0,6.3);g.fill()})}
+$('b2').onclick=()=>m3=0;$('b3').onclick=()=>m3=1;
+$('sys').onpointerdown=e=>{drag=1;lx=e.clientX};addEventListener('pointerup',()=>drag=0);$('sys').onpointermove=e=>{if(drag&&m3){yaw+=(e.clientX-lx)*.01;lx=e.clientX}};
+$('lg').selectedIndex=LG;$('lg').onchange=()=>{LG=$('lg').selectedIndex;xl()};xl();$("w").oninput();setInterval(ui,250);requestAnimationFrame(frame);
+log('sys',t('Console online. Light covers 1 AU in about 8m 19s, so every command waits for its uplink and downlink.'));
+log('sys',t('Pick a probe, send a command, and raise the time warp to skip the wait. Queue as many as you like.'));
 </script></body></html>
