@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Deep Space Command Console</title>
+<style>
+/* ===== STYLE: tokens (dark default, light variant) ===== */
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#060a11;--pn:#0d1420;--ln:#1e2a3e;--tx:#d8e2f2;--mu:#7f8da6;--ac:#52b6ff;--ok:#43d9a0;--wn:#ffb454;--er:#ff6370;--sn:#6fa8ff;color-scheme:dark}
+@media(prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#edf1f7;--pn:#fff;--ln:#cdd7e5;--tx:#14202f;--mu:#586880;--ac:#0a6fc2;--ok:#0b7f55;--wn:#a35f00;--er:#c22436;--sn:#2556c4;color-scheme:light}}
+:root[data-theme="light"]{--bg:#edf1f7;--pn:#fff;--ln:#cdd7e5;--tx:#14202f;--mu:#586880;--ac:#0a6fc2;--ok:#0b7f55;--wn:#a35f00;--er:#c22436;--sn:#2556c4;color-scheme:light}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--tx);font:14px/1.45 system-ui,"Segoe UI",Roboto,sans-serif}
+#app{display:grid;gap:10px;padding:10px;height:100%;box-sizing:border-box;grid-template-columns:270px 1fr 390px;grid-template-rows:auto 1fr auto;grid-template-areas:"h h h" "l c r" "t t t"}
+@media(max-width:900px){#app{height:auto;min-height:100%;grid-template-columns:1fr;grid-template-rows:none;grid-template-areas:"h" "l" "t" "c" "r"}#log{height:45vh;flex:none!important}}
+.pn{background:var(--pn);border:1px solid var(--ln);border-radius:10px;padding:12px;min-height:0;overflow:auto}
+h1{font-size:16px;margin:0;font-weight:600}
+h2{font-size:12px;color:var(--mu);margin:0 0 8px;font-weight:600}
+#H{grid-area:h;display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center;justify-content:space-between}
+.m{font:12px ui-monospace,Menlo,Consolas,monospace;color:var(--mu)}.m b{color:var(--tx);font-weight:500}
+#L{grid-area:l}#C{grid-area:c}#R{grid-area:r;display:flex;flex-direction:column}#T{grid-area:t}
+button{font:inherit;color:inherit;background:transparent;border:1px solid var(--ln);border-radius:8px;padding:8px 10px;cursor:pointer;text-align:left}
+button:hover,button:focus-visible{border-color:var(--ac);outline:none}
+.sel{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
+.sel button.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 14%,transparent)}
+small{display:block;color:var(--mu);font-size:11px}
+dl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:0 0 6px;font-size:13px}dt{color:var(--mu)}
+dd{margin:0;text-align:right;font:12.5px ui-monospace,Menlo,Consolas,monospace}
+ul{list-style:none;margin:0;padding:0;font-size:13px}li{padding:3px 0;display:flex;gap:7px;align-items:baseline}li small{display:inline}
+.o{width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none;align-self:center}.o.off{background:var(--er)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.cmd{display:flex;justify-content:space-between;align-items:center;gap:6px}.cmd.dim{opacity:.45}
+.cmd.dgr{border-color:color-mix(in srgb,var(--er) 55%,var(--ln))}
+kbd{font:11px ui-monospace,monospace;border:1px solid var(--ln);border-radius:4px;padding:0 5px;color:var(--mu)}
+#hint{min-height:3em;margin:10px 0 6px;color:var(--mu)}
+#log{flex:1;min-height:0;overflow:auto;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace}
+.e{padding:4px 0 4px 8px;border-left:3px solid var(--mu);white-space:pre-wrap;margin-bottom:3px}
+.e.sys{color:var(--mu)}.e.tx{border-color:var(--sn);color:var(--sn)}.e.tr{border-color:var(--wn);color:var(--wn)}
+.e.rx{border-color:var(--ok)}.e.rx b{color:var(--ok)}.e.er{border-color:var(--er);color:var(--er)}
+/* timeline */
+#lane{position:relative;height:46px;margin:6px 56px 24px}
+#lane:before{content:"";position:absolute;left:0;right:0;top:22px;height:2px;background:var(--ln)}
+.nd{position:absolute;top:14px;left:-9px;width:18px;height:18px;border-radius:50%;background:var(--ac)}
+.nd.p{left:auto;right:-9px;border-radius:4px;background:var(--wn)}
+.lb{position:absolute;top:36px;font-size:11px;color:var(--mu);white-space:nowrap;transform:translateX(-50%)}
+.pl{position:absolute;top:17px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:currentColor;box-shadow:0 0 10px 2px currentColor}
+.pl.u{color:var(--sn)}.pl.x{color:var(--wn);animation:b .7s infinite}.pl.d{color:var(--ok)}
+@keyframes b{50%{opacity:.3}}@media(prefers-reduced-motion:reduce){.pl.x{animation:none}}
+#q{font:12px ui-monospace,Menlo,Consolas,monospace;max-height:120px;overflow:auto}
+.qi{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 10px;padding:3px 0;border-top:1px solid var(--ln)}
+.ph0{color:var(--sn)}.ph1{color:var(--wn)}.ph2{color:var(--ok)}
+/* confirm dialog */
+#ov{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:20;padding:16px}#ov[hidden]{display:none}
+.bx{background:var(--pn);border:1px solid var(--er);border-radius:12px;padding:18px;max-width:380px}
+.bx h3{margin:0 0 6px;font-size:15px}.bx p{margin:0 0 14px}.bx div{display:flex;gap:8px;justify-content:flex-end}
+#yes{border-color:var(--er);color:var(--er)}
+</style></head><body>
+<div id="app">
+<header id="H"><h1>Deep space command console</h1>
+ <div class="m">Real <b id="cr"></b> · Simulated <b id="cs"></b> <span id="cu"></span></div>
+ <label class="m">Time warp <input id="w" type="range" min="0" max="5" value="4"> <b id="wv"></b></label></header>
+<section class="pn" id="L"><h2>Probe</h2><div class="sel" id="sel"></div><h2>Status</h2><dl id="st"></dl><small>* last value reported by the probe</small><h2 style="margin-top:12px">Instruments carried</h2><ul id="in"></ul></section>
+<section class="pn" id="C"><h2>Commands</h2><div class="grid" id="cm"></div><p id="hint"></p><p class="m">Keys: 1–4 select probe · letter on each button sends it · [ and ] change time warp · Enter / Esc answer confirmations</p></section>
+<section class="pn" id="R"><h2>Mission log</h2><div id="log" aria-live="polite"></div></section>
+<section class="pn" id="T"><h2 id="th"></h2>
+ <div id="lane"><span class="nd"></span><span class="nd p"></span><span class="lb" style="left:0">Earth</span><span class="lb" style="left:100%" id="pn"></span><div id="pl"></div></div>
+ <div id="q"></div></section>
+</div>
+<div id="ov" hidden><div class="bx" role="alertdialog"><h3>Confirm: <span id="ovt"></span></h3><p id="ovp"></p><div><button id="no">Cancel (Esc)</button><button id="yes">Send (Enter)</button></div></div></div>
+<script>
+/* =====================================================================
+   1. DATA  — add probes / commands here.
+   Probe: au0 = distance (AU) at page load, kms = recession speed (km/s),
+          orb = true uses the Earth–Jupiter orbit model instead.
+          bus = temp range °C, tank pressure kPa, power W.
+          inst = code: [name, online]. cmd = per-command {i: instrument code,
+          r: [label, min, max, unit, decimals] readings}.
+   Command: sci = needs an instrument; t = execution time range (sim s);
+          danger = confirmation text.
+   ===================================================================== */
+const C=299792.458,AUKM=149597870.7,DAY=864e5,EPOCH=Date.now(),JUP_OPP=Date.UTC(2026,0,10);
+const WARPS=[1,10,100,1e3,1e4,1e5];
+const PROBES=[
+{id:"v1",name:"Voyager 1",au0:173.1,kms:16.95,status:"Interstellar space, reduced instruments",
+ bus:{T:[-8,10],P:[760,1000],W:[205,214]},
+ inst:{MAG:["Magnetometer",1],PWS:["Plasma wave subsystem",1],LECP:["Low-energy charged particles",1],CRS:["Cosmic ray subsystem (shut down)",0],PLS:["Plasma science (failed 1980)",0],ISS:["Imaging cameras (deactivated)",0]},
+ cmd:{mag:{i:"MAG",r:[["|B|",.3,.7,"nT",3],["Bz",-.4,.4,"nT",3]]},
+  plasma:{i:"PWS",r:[["Electron density",.07,.12,"cm⁻³",3],["LECP ion flux",.1,2.2,"cm⁻²s⁻¹sr⁻¹",2]]},
+  rad:{i:"CRS",r:[]},img:{i:"ISS",r:[]}}},
+{id:"v2",name:"Voyager 2",au0:146.6,kms:15.3,status:"Interstellar space, reduced instruments",
+ bus:{T:[-6,12],P:[780,1020],W:[208,218]},
+ inst:{MAG:["Magnetometer",1],PLS:["Plasma science",1],PWS:["Plasma wave subsystem",1],CRS:["Cosmic ray subsystem",1],LECP:["Low-energy charged particles (shut down)",0],ISS:["Imaging cameras (deactivated)",0]},
+ cmd:{mag:{i:"MAG",r:[["|B|",.3,.8,"nT",3],["Bz",-.5,.5,"nT",3]]},
+  plasma:{i:"PLS",r:[["Plasma density",.05,.14,"cm⁻³",3],["Bulk speed",20,60,"km/s",0]]},
+  rad:{i:"CRS",r:[["Galactic cosmic rays",1.6,2.7,"cts/s",2],["Anomalous cosmic rays",0,.15,"cts/s",3]]},img:{i:"ISS",r:[]}}},
+{id:"nh",name:"New Horizons",au0:65.8,kms:13.0,status:"Kuiper Belt cruise, extended mission",
+ bus:{T:[8,22],P:[900,1300],W:[188,198]},
+ inst:{LORRI:["Long Range Reconnaissance Imager",1],Ralph:["Visible/IR imager-spectrometer",1],Alice:["Ultraviolet spectrometer",1],REX:["Radio science experiment",1],SWAP:["Solar wind plasma analyser",1],PEPSSI:["Energetic particle spectrometer",1],SDC:["Student Dust Counter",1]},
+ cmd:{plasma:{i:"SWAP",r:[["Solar wind speed",360,430,"km/s",0],["Proton density",.0002,.0009,"cm⁻³",4],["PEPSSI ion flux",.01,.4,"cm⁻²s⁻¹sr⁻¹",3]]},
+  rad:{i:"SDC",r:[["Dust impact rate",0,4,"hits/h",1]]},
+  img:{i:"LORRI",r:[["Exposure",30,300,"ms",0],["Compressed size",200,1400,"kB",0],["Limiting magnitude",16.5,18.4,"mag",1]]}}},
+{id:"ju",name:"Juno",orb:true,status:"Jupiter orbit, extended mission",
+ bus:{T:[4,22],P:[1700,1900],W:[420,470]},
+ inst:{MAG:["Fluxgate magnetometer",1],JADE:["Jovian auroral distributions experiment",1],JEDI:["Energetic particle detector",1],Waves:["Radio and plasma waves",1],UVS:["Ultraviolet spectrograph",1],JIRAM:["Infrared auroral mapper",1],MWR:["Microwave radiometer",1],JunoCam:["Visible-light camera",1]},
+ cmd:{mag:{i:"MAG",r:[["|B|",70,900,"nT",0],["Bφ",-80,80,"nT",0]]},
+  plasma:{i:"JADE",r:[["Electron density",.01,30,"cm⁻³",2],["Ion bulk speed",100,420,"km/s",0]]},
+  rad:{i:"JEDI",r:[["Dose rate (shielded)",.02,2.5,"krad/h",2],["Electron flux >1 MeV",1e4,8e6,"cm⁻²s⁻¹",0]]},
+  img:{i:"JunoCam",r:[["Exposure",1,60,"ms",0],["Compressed size",300,1800,"kB",0]]}}}
+];
+const COMMANDS=[
+{id:"mag",key:"M",label:"Magnetic field",sci:1,t:[3,9],tip:"Read the magnetometer: field magnitude and one vector component."},
+{id:"plasma",key:"P",label:"Plasma / particle flux",sci:1,t:[5,20],tip:"Measure plasma density, speed and energetic particle flux."},
+{id:"temp",key:"T",label:"Temperature",t:[1,4],tip:"Read thermistors on the spacecraft bus and instrument bay."},
+{id:"rad",key:"R",label:"Radiation / dust",sci:1,t:[4,15],tip:"Cosmic-ray, radiation dose or dust-impact counters, depending on the probe."},
+{id:"press",key:"K",label:"Tank pressure",t:[1,3],tip:"Read propellant tank pressure, the one pressure a probe can report."},
+{id:"img",key:"I",label:"Take image",sci:1,t:[20,90],tip:"Capture and compress one frame, if a working camera is still aboard."},
+{id:"diag",key:"D",label:"Run diagnostics",t:[30,120],tip:"Self-test of flight computer, attitude control, receiver and thrusters."},
+{id:"power",key:"W",label:"Check power levels",t:[1,4],tip:"Read bus power, voltage and load margin."},
+{id:"ant",key:"A",label:"Adjust antenna",t:[60,300],danger:"A bad slew can drop the signal for hours or days, and every correction costs a full round trip. Send anyway?",tip:"Re-point the high-gain antenna to reduce pointing error. Risky."},
+{id:"safe",key:"S",label:"Enter safe mode",t:[5,20],danger:"The probe will shed loads and stop all science until you send a reboot. Send anyway?",tip:"Shed non-essential loads and inhibit science. Dangerous."},
+{id:"reboot",key:"X",label:"Reboot flight computer",t:[30,90],danger:"A failed restart can leave the probe in safe mode, and the result takes a full round trip to arrive. Send anyway?",tip:"Restart the command computer. Also exits safe mode. Dangerous."}
+];
+PROBES.forEach(p=>{p.rt={safe:0,pt:.02};p.kn={safe:0,pt:.02,pw:(p.bus.W[0]+p.bus.W[1])/2}});
+
+/* =====================================================================
+   2. SIMULATION — distance, light-time, command execution, in-flight queue
+   ===================================================================== */
+let sim=EPOCH,Q=[],seq=0,sel=0,warp=1e4,last=performance.now(),t0=last,pend=null;
+const $=id=>document.getElementById(id),pad=n=>String(n|0).padStart(2,"0"),R=(a,b)=>a+Math.random()*(b-a);
+const F=(v,d=2)=>Math.abs(v)>=1e5?v.toExponential(2):v.toFixed(d),any=a=>a[Math.random()*a.length|0];
+const num=(v,d=0)=>v.toLocaleString("en-US",{maximumFractionDigits:d,minimumFractionDigits:d});
+const dur=s=>{s=Math.max(0,s);if(s<60)return s.toFixed(1)+"s";const h=s/3600|0,m=s%3600/60|0;return(h?h+"h "+pad(m)+"m ":m+"m ")+pad(s%60)+"s"};
+const hms=t=>new Date(t).toISOString().slice(11,19);
+const au=(p,t)=>p.orb?Math.sqrt(28.04-10.4*Math.cos((t-JUP_OPP)/DAY/398.9*6.2832)):p.au0+p.kms*86400/AUKM*(t-EPOCH)/DAY;
+const lt=(p,t)=>au(p,t)*AUKM/C*1e3;           /* one-way light time, ms */
+const cmdOf=id=>COMMANDS.find(c=>c.id==id),P=()=>PROBES[sel];
+const unavail=(p,c)=>c.sci&&(!p.cmd[c.id]||!p.inst[p.cmd[c.id].i][1]);
+const reads=r=>r.map(([l,a,b,u,d])=>[l,F(R(a,b),d),u]);
+
+/* Runs on the probe when the command arrives; returns what it will downlink. */
+function execute(p,c){
+ const bus=p.bus,k=p.cmd[c.id],err=m=>({t:"er",h:"COMMAND FAILED",m}),ok=(lines,fx,m)=>({t:"rx",h:"OK",lines,fx,m});
+ if(p.rt.safe&&c.sci)return err("Rejected: spacecraft is in SAFE MODE (science inhibited). Send a reboot to resume.");
+ if(c.sci){if(!k)return err("No suitable instrument aboard "+p.name+".");if(!p.inst[k.i][1])return err(k.i+" is OFFLINE ("+p.inst[k.i][0]+").")}
+ const x=Math.random();
+ if(x<.06)return{t:"er",h:"PACKET LOSS",m:"Downlink frames failed error correction. No data recovered."};
+ if(c.sci&&x<.1)return err("Low power: load-shed inhibited instrument turn-on.");
+ if(c.sci&&x<.13)return err("Instrument fault: no valid data. Retry suggested.");
+ switch(c.id){
+  case"mag":case"plasma":case"rad":case"img":return ok(reads(k.r),0,c.id=="img"?"Frame compressed and stored; thumbnail not simulated.":"");
+  case"temp":return ok(reads([["Bus",...bus.T,"°C",1],["Instrument bay",bus.T[0]+4,bus.T[1]+4,"°C",1]]));
+  case"press":return ok(reads([["Tank pressure",...bus.P,"kPa",0]]));
+  case"power":{const w=R(...bus.W);return ok([["Bus power",F(w,1),"W"],["Bus voltage",F(R(27.2,29.8)),"V"],["Load margin",F(R(1,14),1),"W"]],{pw:w})}
+  case"diag":return ok(["Flight computer","Attitude control","Receiver lock","Thrusters"].map(s=>[s,any(["NOMINAL","NOMINAL","NOMINAL","NOMINAL","DEGRADED"]),""]));
+  case"ant":{const bad=Math.random()<.15,np=bad?R(.3,.6):R(.003,.02);
+   return{t:bad?"er":"rx",h:bad?"OVERSHOOT":"OK",lines:[["Pointing error",F(p.rt.pt,3)+" → "+F(np,3),"°"]],fx:{pt:np},m:bad?"Slew overshoot: about 3 dB signal loss. Corrective slew advised.":""}}
+  case"safe":return p.rt.safe?err("Already in SAFE MODE."):ok([["Mode","SAFE",""]],{safe:1},"Non-essential loads shed; science inhibited.");
+  case"reboot":return Math.random()<.15?{t:"er",h:"REBOOT FAULT",m:"Memory fault on restart. Probe came up in SAFE MODE.",fx:{safe:1}}:ok([["Mode","NOMINAL",""]],{safe:0},"Flight computer restarted; science re-enabled.");
+ }
+}
+function go(c,p){
+ const up=lt(p,sim),m={n:++seq,p,c,t0:sim,up,ph:0,tUp:sim+up,ex:R(...c.t)*1e3};
+ m.tEx=m.tUp+m.ex;Q.push(m);
+ log("tx",`#${m.n} ▶ ${p.name} · ${c.label} sent. Uplink takes ${dur(up/1e3)}.`);
+}
+function step(){ /* advance every in-flight command through uplink → execute → downlink */
+ for(const m of Q){
+  if(m.ph==0&&sim>=m.tUp){m.ph=1;log("tr",`#${m.n} ${m.p.name} received the command and is executing.`,m.tUp)}
+  if(m.ph==1&&sim>=m.tEx){m.res=execute(m.p,m.c);Object.assign(m.p.rt,m.res.fx);m.dn=lt(m.p,m.tEx);m.tDn=m.tEx+m.dn;m.ph=2;
+   log("tr",`#${m.n} ${m.p.name} replied. Downlink takes ${dur(m.dn/1e3)}.`,m.tEx)}
+  if(m.ph==2&&sim>=m.tDn){m.ph=3;const r=m.res;Object.assign(m.p.kn,r.fx);
+   let s=`<b>#${m.n} ◀ ${m.p.name} · ${m.c.label} · ${r.h}</b> (round trip ${dur((m.tDn-m.t0)/1e3)})`;
+   if(r.lines)s+="\n"+r.lines.map(([l,v,u])=>"   "+l.padEnd(20)+v+" "+u).join("\n");
+   if(r.m)s+="\n   "+r.m;log(r.t,s,m.tDn)}
+ }
+ Q=Q.filter(m=>m.ph<3);
+}
+
+/* =====================================================================
+   3. UI — rendering, events, keyboard
+   ===================================================================== */
+function log(cls,txt,t=sim){const e=document.createElement("div"),L=$("log");e.className="e "+cls;e.innerHTML=hms(t)+"  "+txt;L.append(e);
+ while(L.children.length>300)L.firstChild.remove();L.scrollTop=1e9}
+$("sel").innerHTML=PROBES.map((p,i)=>`<button data-i="${i}"><b>${p.name}</b><small id="sd${i}"></small></button>`).join("");
+$("cm").innerHTML=COMMANDS.map(c=>`<button class="cmd ${c.danger?"dgr":""}" data-c="${c.id}" title="${c.tip}"><span>${c.label}</span><kbd>${c.key}</kbd></button>`).join("");
+function choose(i){sel=i;[...$("sel").children].forEach((b,j)=>b.classList.toggle("on",i==j));$("hint").textContent="Hover or focus a command to see what it does.";
+ $("pn").textContent=P().name;ui()}
+function send(id){const c=cmdOf(id);if(c.danger){pend=[c,P()];$("ovt").textContent=c.label+" → "+P().name;$("ovp").textContent=c.danger;$("ov").hidden=false}else go(c,P())}
+const closeOv=()=>{$("ov").hidden=true},yes=()=>{closeOv();go(...pend)};
+$("yes").onclick=yes;$("no").onclick=closeOv;
+$("sel").onclick=e=>{const b=e.target.closest("button");if(b)choose(+b.dataset.i)};
+$("cm").onclick=e=>{const b=e.target.closest("button");if(b)send(b.dataset.c)};
+$("cm").onmouseover=$("cm").onfocusin=e=>{const b=e.target.closest("button");if(!b)return;const c=cmdOf(b.dataset.c);
+ $("hint").textContent=c.tip+(unavail(P(),c)?" Not available on "+P().name+": no working instrument for it.":"")};
+$("w").oninput=()=>{warp=WARPS[$("w").value];ui()};
+addEventListener("keydown",e=>{
+ if(!$("ov").hidden){if(e.key=="Escape")closeOv();if(e.key=="Enter"){e.preventDefault();yes()}return}
+ if(e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key.toUpperCase();
+ if(k>="1"&&k<=String(PROBES.length))choose(+k-1);
+ else if(k=="["||k=="]"){$("w").value=Math.max(0,Math.min(5,+$("w").value+(k=="]"?1:-1)));$("w").oninput()}
+ else{const c=COMMANDS.find(c=>c.key==k);if(c){e.preventDefault();send(c.id)}}});
+
+function ui(){
+ const p=P(),a=au(p,sim),l=lt(p,sim)/1e3,rr=(au(p,sim+36e5)-a)*AUKM/3600,el=(sim-EPOCH)/1e3;
+ $("cr").textContent="T+"+hms(performance.now()-t0);
+ $("cs").textContent="T+"+(el/86400|0)+"d "+hms(el%86400*1e3);
+ $("cu").textContent="("+new Date(sim).toISOString().slice(0,16).replace("T"," ")+" UTC)";
+ $("wv").textContent=num(warp)+"× (1 s = "+dur(warp)+")";
+ PROBES.forEach((q,i)=>$("sd"+i).textContent=num(au(q,sim),1)+" AU · "+dur(lt(q,sim)/1e3).split(" ").slice(0,2).join(" "));
+ const row=(k,v)=>`<dt>${k}</dt><dd>${v}</dd>`;
+ $("st").innerHTML=row("Status",p.kn.safe?'<span style="color:var(--er)">SAFE MODE</span>':p.status)+row("Distance",num(a,3)+" AU")+row("",num(a*AUKM)+" km")
+  +row("One-way delay",dur(l))+row("Round trip",dur(2*l))+row("Range rate",(rr>=0?"+":"")+rr.toFixed(2)+" km/s")
+  +row("Bus power *",num(p.kn.pw,1)+" W")+row("Pointing error *",p.kn.pt.toFixed(3)+"°");
+ $("in").innerHTML=Object.entries(p.inst).map(([k,[n,on]])=>`<li><span class="o ${on?"":"off"}"></span><b>${k}</b> <small>${n}${on?"":" · offline"}</small></li>`).join("");
+ document.querySelectorAll(".cmd").forEach(b=>b.classList.toggle("dim",!!unavail(p,cmdOf(b.dataset.c))));
+ $("th").textContent=`Earth ↔ ${p.name}: one-way ${dur(l)}, round trip ${dur(2*l)} (transit only)`;
+ $("q").innerHTML=Q.length?Q.map(m=>{const end=[m.tUp,m.tEx,m.tDn][m.ph],rem=(end-sim)/1e3,
+   tot=m.ph==2?m.tDn-m.t0:(m.ph==0?m.up+m.ex:m.tEx-m.t0)+lt(m.p,sim);
+   return`<div class="qi"><span>#${m.n} ${m.p.name} · ${m.c.label}</span><span><i class="ph${m.ph}">${["Uplink","Executing","Downlink"][m.ph]}</i> ${dur(rem)} sim · ${dur(rem/warp)} real · round trip ≈ ${dur(tot/1e3)}</span></div>`}).join("")
+  :'<span class="m">No commands in flight. Send one and watch the pulse travel.</span>';
+}
+function frame(now){
+ sim+=Math.min(now-last,250)*warp;last=now;step();
+ const p=P();$("pl").innerHTML=Q.filter(m=>m.p===p).map(m=>{
+  const x=m.ph==0?Math.min(1,(sim-m.t0)/m.up):m.ph==1?1:1-Math.min(1,(sim-m.tEx)/m.dn);
+  return`<i class="pl ${["u","x","d"][m.ph]}" style="left:${x*100}%"></i>`}).join("");
+ requestAnimationFrame(frame)}
+choose(0);$("w").oninput();setInterval(ui,250);requestAnimationFrame(frame);
+log("sys","Console online. Light covers 1 AU in about 8m 19s, so every command waits for its uplink and downlink.");
+log("sys","Pick a probe, send a command, and raise the time warp to skip the wait. Queue as many as you like.");
+</script></body></html>
