@@ -17,7 +17,7 @@ h1{font-size:16px;margin:0;font-weight:600}
 h2{font-size:12px;color:var(--mu);margin:0 0 8px;font-weight:600}
 #H{grid-area:h;display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center;justify-content:space-between}
 .m{font:12px ui-monospace,Menlo,Consolas,monospace;color:var(--mu)}.m b{color:var(--tx);font-weight:500}
-#L{grid-area:l}#C{grid-area:c}#R{grid-area:r;display:flex;flex-direction:column}#T{grid-area:t}
+#L{grid-area:l}#C{grid-area:c;display:flex;flex-direction:column}#R{grid-area:r;display:flex;flex-direction:column}#T{grid-area:t;display:grid;grid-template-columns:1.2fr 1fr;gap:4px 18px;max-height:270px}#T h2{grid-column:1/3}
 button{font:inherit;color:inherit;background:transparent;border:1px solid var(--ln);border-radius:8px;padding:8px 10px;cursor:pointer;text-align:left}
 button:hover,button:focus-visible{border-color:var(--ac);outline:none}
 .sel{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
@@ -45,7 +45,10 @@ kbd{font:11px ui-monospace,monospace;border:1px solid var(--ln);border-radius:4p
 .pl{position:absolute;top:17px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:currentColor;box-shadow:0 0 10px 2px currentColor}
 .pl.u{color:var(--sn)}.pl.x{color:var(--wn);animation:b .7s infinite}.pl.d{color:var(--ok)}
 @keyframes b{50%{opacity:.3}}@media(prefers-reduced-motion:reduce){.pl.x{animation:none}}
-#q{font:12px ui-monospace,Menlo,Consolas,monospace;max-height:120px;overflow:auto}
+#q{font:12px ui-monospace,Menlo,Consolas,monospace;max-height:210px;overflow:auto}
+#lanes{overflow:auto;max-height:215px}.ln{display:grid;grid-template-columns:140px 1fr 84px;align-items:center;gap:8px;height:19px;font-size:12px;cursor:pointer}.ln.on{color:var(--ac)}.ln small{text-align:right;font:11px ui-monospace,Menlo,monospace}
+.tr{position:relative;height:100%}.tr:before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:var(--ln)}.tr .pl{top:50%;width:9px;height:9px;margin:-4px 0 0 -4px;box-shadow:0 0 7px 1px currentColor}
+@media(max-width:900px){#T{grid-template-columns:1fr;max-height:none}#T h2{grid-column:1}}
 .qi{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 10px;padding:3px 0;border-top:1px solid var(--ln)}
 .ph0{color:var(--sn)}.ph1{color:var(--wn)}.ph2{color:var(--ok)}
 /* confirm dialog */
@@ -53,17 +56,17 @@ kbd{font:11px ui-monospace,monospace;border:1px solid var(--ln);border-radius:4p
 .bx{background:var(--pn);border:1px solid var(--er);border-radius:12px;padding:18px;max-width:380px}
 .bx h3{margin:0 0 6px;font-size:15px}.bx p{margin:0 0 14px}.bx div{display:flex;gap:8px;justify-content:flex-end}
 #yes{border-color:var(--er);color:var(--er)}
-#sys{width:100%;height:290px;display:block;margin-top:8px;border:1px solid var(--ln);border-radius:8px;cursor:grab;touch-action:pan-y}.tb{display:flex;gap:6px;align-items:center;margin-top:12px}.tb button{padding:2px 10px}select{font:inherit;color:inherit;background:var(--pn);border:1px solid var(--ln);border-radius:6px;padding:3px 6px}
+#sys{width:100%;flex:1;min-height:340px;display:block;margin-top:8px;border:1px solid var(--ln);border-radius:8px;cursor:grab;touch-action:pan-y}.tb{display:flex;gap:6px;align-items:center;margin-top:12px}.tb button{padding:2px 10px}select{font:inherit;color:inherit;background:var(--pn);border:1px solid var(--ln);border-radius:6px;padding:3px 6px}
 </style></head><body>
 <div id="app">
 <header id="H"><h1>Deep space command console</h1>
  <div class="m">Real <b id="cr"></b> · Simulated <b id="cs"></b> <span id="cu"></span></div>
  <select id="lg" aria-label="Language"><option>English</option><option>Español</option><option>Français</option></select> <label class="m">Time warp <input id="w" type="range" min="0" max="5" value="4"> <b id="wv"></b></label></header>
 <section class="pn" id="L"><h2>Probe</h2><div class="sel" id="sel"></div><h2>Status</h2><dl id="st"></dl><small>* last value reported by the probe</small><h2 style="margin-top:12px">Instruments carried</h2><ul id="in"></ul></section>
-<section class="pn" id="C"><h2>Commands</h2><div class="grid" id="cm"></div><p id="hint"></p><div class="tb"><b>Solar system</b><button id="b2">2D</button><button id="b3">3D</button><small>(square-root scale)</small></div><canvas id="sys"></canvas><p class="m">Keys: 1–7 select probe · letter on each button sends it · [ and ] change time warp · Enter / Esc answer confirmations</p></section>
+<section class="pn" id="C"><h2>Commands</h2><div class="grid" id="cm"></div><p id="hint"></p><div class="tb"><b>Solar system</b><button id="b2">2D</button><button id="b3">3D</button><small>(square-root scale)</small></div><canvas id="sys"></canvas><p class="m">Keys: 1–9 select probe · letter on each button sends it · [ and ] change time warp · Enter / Esc answer confirmations</p></section>
 <section class="pn" id="R"><h2>Mission log</h2><div id="log" aria-live="polite"></div></section>
 <section class="pn" id="T"><h2 id="th"></h2>
- <div id="lane"><span class="nd"></span><span class="nd p"></span><span class="lb" style="left:0">Earth</span><span class="lb" style="left:100%" id="pn"></span><div id="pl"></div></div>
+ <div id="lanes"></div><span id="pn" hidden></span>
  <div id="q"></div></section>
 </div>
 <div id="ov" hidden><div class="bx" role="alertdialog"><h3>Confirm: <span id="ovt"></span></h3><p id="ovp"></p><div><button id="no">Cancel (Esc)</button><button id="yes">Send (Enter)</button></div></div></div>
@@ -117,7 +120,19 @@ const PROBES=[
 {id:'pk',name:'Parker Solar Probe',orb:1,status:'Solar orbit, close perihelion passes',
  bus:{T:[18,32],P:[1000,1400],W:[340,390]},
  inst:{FIELDS:['Electric and magnetic fields',1],SWEAP:['Solar wind electrons, alphas, protons',1],WISPR:['Wide-field imager',1],ISOIS:['Energetic particle suite',1]},
- cmd:{mag:{i:'FIELDS',r:[['|B|',20,2000,'nT',0],['Bz',-500,500,'nT',0]]},plasma:{i:'SWEAP',r:[['Proton density',50,3000,'cm⁻³',0],['Solar wind speed',250,700,'km/s',0]]},rad:{i:'ISOIS',r:[['Energetic ion flux',1,900,'cm⁻²s⁻¹sr⁻¹',1]]},img:{i:'WISPR',r:[['Exposure',.5,12,'s',1],['Compressed size',400,2200,'kB',0]]},temp:{r:[['Heat shield (sunward)',120,1370,'°C',0],['Bus (shaded)',18,32,'°C',1]]}}}
+ cmd:{mag:{i:'FIELDS',r:[['|B|',20,2000,'nT',0],['Bz',-500,500,'nT',0]]},plasma:{i:'SWEAP',r:[['Proton density',50,3000,'cm⁻³',0],['Solar wind speed',250,700,'km/s',0]]},rad:{i:'ISOIS',r:[['Energetic ion flux',1,900,'cm⁻²s⁻¹sr⁻¹',1]]},img:{i:'WISPR',r:[['Exposure',.5,12,'s',1],['Compressed size',400,2200,'kB',0]]},temp:{r:[['Heat shield (sunward)',120,1370,'°C',0],['Bus (shaded)',18,32,'°C',1]]}}},
+{id:'p10',name:'Pioneer 10',au0:140.7,kms:12,status:'Historic mission (training replay)',bus:{T:[-10,5],P:[500,800],W:[30,40]},
+ inst:{HVM:['Helium vector magnetometer',1],PA:['Plasma analyzer',1],GTT:['Geiger tube telescope',1],IPP:['Imaging photopolarimeter',1]},
+ cmd:{mag:{i:'HVM',r:[['|B|',.1,.5,'nT',3],['Bz',-.3,.3,'nT',3]]},plasma:{i:'PA',r:[['Proton density',.002,.02,'cm⁻³',3],['Solar wind speed',250,450,'km/s',0]]},rad:{i:'GTT',r:[['Cosmic-ray rate',.3,1.2,'cts/s',2]]},img:{i:'IPP',r:[['Exposure',40,400,'ms',0],['Compressed size',6,40,'kB',0]]}}},
+{id:'p11',name:'Pioneer 11',au0:119,kms:11.4,status:'Historic mission (training replay)',bus:{T:[-10,5],P:[500,800],W:[30,40]},
+ inst:{HVM:['Helium vector magnetometer',1],PA:['Plasma analyzer',1],GTT:['Geiger tube telescope',1],IPP:['Imaging photopolarimeter',1]},
+ cmd:{mag:{i:'HVM',r:[['|B|',.1,.5,'nT',3],['Bz',-.3,.3,'nT',3]]},plasma:{i:'PA',r:[['Proton density',.002,.02,'cm⁻³',3],['Solar wind speed',250,450,'km/s',0]]},rad:{i:'GTT',r:[['Cosmic-ray rate',.3,1.2,'cts/s',2]]},img:{i:'IPP',r:[['Exposure',40,400,'ms',0],['Compressed size',6,40,'kB',0]]}}},
+{id:'ca',name:'Cassini (Saturn)',orb:1,status:'Historic mission (training replay)',bus:{T:[0,20],P:[1200,1600],W:[610,650]},
+ inst:{ISS:['Imaging science subsystem',1],MAG:['Magnetometer',1],CAPS:['Plasma spectrometer',1],CDA:['Cosmic dust analyzer',1],RPWS:['Radio and plasma wave science',1],CIRS:['Composite infrared spectrometer',1]},
+ cmd:{mag:{i:'MAG',r:[['|B|',1,40,'nT',1],['Bz',-20,20,'nT',1]]},plasma:{i:'CAPS',r:[['Electron density',.01,2,'cm⁻³',2],['Ion bulk speed',20,200,'km/s',0]]},rad:{i:'CDA',r:[['Dust impact rate',0,30,'hits/h',0]]},img:{i:'ISS',r:[['Exposure',5,2000,'ms',0],['Compressed size',200,1500,'kB',0]]}}},
+{id:'op',name:'Opportunity (Mars)',orb:1,status:'Historic mission (training replay)',bus:{T:[-40,0],P:[0,0],W:[60,140]},
+ inst:{Pancam:['Panoramic camera',1],'Mini-TES':['Thermal emission spectrometer',1],APXS:['X-ray spectrometer',1],MI:['Microscopic imager',1],RAT:['Rock abrasion tool',1]},
+ cmd:{temp:{r:[['Air temperature',-90,5,'°C',1]]},press:{r:[['Dust opacity (tau)',.4,1.2,'',2]]},img:{i:'Pancam',r:[['Exposure',5,400,'ms',0],['Compressed size',150,1200,'kB',0]]}}}
 ];
 const COMMANDS=[
 {id:"mag",key:"M",label:"Magnetic field",sci:1,t:[3,9],tip:"Read the magnetometer: field magnitude and one vector component."},
@@ -145,16 +160,16 @@ const dur=s=>{s=Math.max(0,s);if(s<60)return s.toFixed(1)+"s";const h=s/3600|0,m
 const hms=t=>new Date(t).toISOString().slice(11,19);
 /* Heliocentric model (AU): circular Earth/Mars/Jupiter, rough Parker orbit, fixed headings for deep probes */
 const pol=(r,a,z=0)=>[r*Math.cos(a),r*Math.sin(a),z],dg=Math.PI/180,dy=t=>(t-JUP_OPP)/DAY;
-const E=t=>pol(1,(110+dy(t)*.98565)*dg),POS={v1:[256,35],v2:[290,-48],nh:[295,3]};
+const E=t=>pol(1,(110+dy(t)*.98565)*dg),POS={v1:[256,35],v2:[290,-48],nh:[295,3],p10:[83,-3],p11:[277,17]};
 function hel(p,t){const q=p.id;
- if(q=='ju')return pol(5.2,(110+dy(t)*.0831)*dg);if(q=='pe')return pol(1.524,(290+dy(t)*.52408)*dg);if(q=='lro')return E(t);
+ if(q=='ju')return pol(5.2,(110+dy(t)*.0831)*dg);if(q=='pe'||q=='op')return pol(1.524,(290+dy(t)*.52408)*dg);if(q=='ca')return pol(9.58,(2+dy(t)*.03346)*dg);if(q=='lro')return E(t);
  if(q=='pk'){const a=dy(t)*6.2832/88;return pol(.388-.342*Math.cos(a),a+1)}
  const[o,b]=POS[q],r=au(p,t);return pol(r*Math.cos(b*dg),o*dg,r*Math.sin(b*dg))}
 const au=(p,t)=>p.id=='lro'?(384400+21000*Math.cos(dy(t)/27.55*6.2832))/AUKM:p.orb?Math.hypot(...hel(p,t).map((v,i)=>v-E(t)[i])):p.au0+p.kms*86400/AUKM*(t-EPOCH)/DAY;
 /* Languages: English text is the key; TR holds [Spanish, French]. Placeholders {0}, {1}... */
 let LG=({es:1,fr:2})[(navigator.language||'en').slice(0,2)]||0;
 const TR={'Deep space command console':['Consola de comando del espacio profundo','Console de commande de l’espace lointain'],'Real':['Real','Réel'],'Simulated':['Simulado','Simulé'],'Time warp':['Distorsión temporal','Accélération du temps'],'Probe':['Sonda','Sonde'],'Status':['Estado','État'],'* last value reported by the probe':['* último valor informado por la sonda','* dernière valeur transmise par la sonde'],'Instruments carried':['Instrumentos a bordo','Instruments embarqués'],'Commands':['Comandos','Commandes'],'Mission log':['Registro de misión','Journal de mission'],'Solar system':['Sistema solar','Système solaire'],'(square-root scale)':['(escala de raíz cuadrada)','(échelle racine carrée)'],
-'Keys: 1–7 select probe · letter on each button sends it · [ and ] change time warp · Enter / Esc answer confirmations':['Teclas: 1–7 elegir sonda · la letra de cada botón lo envía · [ y ] cambian la distorsión temporal · Enter / Esc responden confirmaciones','Touches : 1–7 choisir la sonde · la lettre de chaque bouton l’envoie · [ et ] changent l’accélération · Entrée / Échap répondent aux confirmations'],
+'Keys: 1–9 select probe · letter on each button sends it · [ and ] change time warp · Enter / Esc answer confirmations':['Teclas: 1–9 elegir sonda · la letra de cada botón lo envía · [ y ] cambian la distorsión temporal · Enter / Esc responden confirmaciones','Touches : 1–9 choisir la sonde · la lettre de chaque bouton l’envoie · [ et ] changent l’accélération · Entrée / Échap répondent aux confirmations'],
 'Confirm:':['Confirmar:','Confirmer :'],'Cancel (Esc)':['Cancelar (Esc)','Annuler (Échap)'],'Send (Enter)':['Enviar (Enter)','Envoyer (Entrée)'],'Earth':['Tierra','Terre'],'Mars':['Marte','Mars'],'Jupiter':['Júpiter','Jupiter'],
 'Distance':['Distancia','Distance'],'One-way delay':['Retardo de ida','Délai aller'],'Round trip':['Ida y vuelta','Aller-retour'],'round trip':['ida y vuelta','aller-retour'],'Range rate':['Velocidad radial','Vitesse radiale'],'Bus power *':['Potencia del bus *','Puissance du bus *'],'Pointing error *':['Error de apuntado *','Erreur de pointage *'],'SAFE MODE':['MODO SEGURO','MODE SÉCURITÉ'],' · offline':[' · fuera de línea',' · hors ligne'],
 'Interstellar space, reduced instruments':['Espacio interestelar, instrumentos reducidos','Espace interstellaire, instruments réduits'],'Kuiper Belt cruise, extended mission':['Crucero por el cinturón de Kuiper, misión extendida','Croisière dans la ceinture de Kuiper, mission étendue'],'Jupiter orbit, extended mission':['Órbita de Júpiter, misión extendida','Orbite de Jupiter, mission étendue'],'Lunar polar orbit, extended mission':['Órbita polar lunar, misión extendida','Orbite polaire lunaire, mission étendue'],'Jezero Crater, surface operations':['Cráter Jezero, operaciones en superficie','Cratère Jezero, opérations en surface'],'Solar orbit, close perihelion passes':['Órbita solar, pasos cercanos al perihelio','Orbite solaire, passages proches du périhélie'],
@@ -167,12 +182,26 @@ const TR={'Deep space command console':['Consola de comando del espacio profundo
 'A bad slew can drop the signal for hours or days, and every correction costs a full round trip. Send anyway?':['Un mal giro puede perder la señal por horas o días, y cada corrección cuesta un viaje de ida y vuelta. ¿Enviar igual?','Un mauvais pointage peut couper le signal des heures ou des jours, et chaque correction coûte un aller-retour. Envoyer quand même ?'],'The probe will shed loads and stop all science until you send a reboot. Send anyway?':['La sonda apagará cargas y detendrá toda la ciencia hasta que envíes un reinicio. ¿Enviar igual?','La sonde coupera ses charges et arrêtera toute science jusqu’à un redémarrage. Envoyer quand même ?'],'A failed restart can leave the probe in safe mode, and the result takes a full round trip to arrive. Send anyway?':['Un reinicio fallido puede dejar la sonda en modo seguro, y el resultado tarda un viaje completo en llegar. ¿Enviar igual?','Un redémarrage raté peut laisser la sonde en mode sécurité, et le résultat met un aller-retour à arriver. Envoyer quand même ?'],
 'COMMAND FAILED':['COMANDO FALLIDO','ÉCHEC DE LA COMMANDE'],'PACKET LOSS':['PÉRDIDA DE PAQUETES','PERTE DE PAQUETS'],'OVERSHOOT':['SOBREPASO','DÉPASSEMENT'],'REBOOT FAULT':['FALLO DE REINICIO','ÉCHEC DU REDÉMARRAGE'],'DEGRADED':['DEGRADADO','DÉGRADÉ'],
 'Rejected: spacecraft is in SAFE MODE (science inhibited). Send a reboot to resume.':['Rechazado: la nave está en MODO SEGURO (ciencia inhibida). Envía un reinicio para reanudar.','Rejeté : la sonde est en MODE SÉCURITÉ (science inhibée). Envoyez un redémarrage pour reprendre.'],'No suitable instrument aboard {0}.':['{0} no lleva un instrumento adecuado.','Aucun instrument adapté à bord de {0}.'],'{0} is OFFLINE ({1}).':['{0} está FUERA DE LÍNEA ({1}).','{0} est HORS LIGNE ({1}).'],'Downlink frames failed error correction. No data recovered.':['Las tramas de bajada fallaron la corrección de errores. No se recuperaron datos.','Les trames descendantes ont échoué à la correction d’erreurs. Aucune donnée récupérée.'],'Low power: load-shed inhibited instrument turn-on.':['Poca energía: el recorte de cargas impidió encender el instrumento.','Énergie faible : le délestage a empêché l’allumage de l’instrument.'],'Instrument fault: no valid data. Retry suggested.':['Fallo del instrumento: sin datos válidos. Se sugiere reintentar.','Panne d’instrument : aucune donnée valide. Réessayer.'],'Frame compressed and stored; thumbnail not simulated.':['Imagen comprimida y guardada; miniatura no simulada.','Image compressée et stockée ; vignette non simulée.'],'Slew overshoot: about 3 dB signal loss. Corrective slew advised.':['Giro excesivo: pérdida de señal de unos 3 dB. Se aconseja corregir.','Dépassement : perte de signal d’environ 3 dB. Correction conseillée.'],'Already in SAFE MODE.':['Ya está en MODO SEGURO.','Déjà en MODE SÉCURITÉ.'],'Non-essential loads shed; science inhibited.':['Cargas no esenciales apagadas; ciencia inhibida.','Charges non essentielles coupées ; science inhibée.'],'Memory fault on restart. Probe came up in SAFE MODE.':['Fallo de memoria al reiniciar. La sonda arrancó en MODO SEGURO.','Erreur mémoire au redémarrage. La sonde a démarré en MODE SÉCURITÉ.'],'Flight computer restarted; science re-enabled.':['Computadora reiniciada; ciencia reactivada.','Ordinateur redémarré ; science réactivée.'],
-'Flight computer':['Computadora de vuelo','Ordinateur de bord'],'Attitude control':['Control de actitud','Contrôle d’attitude'],'Receiver lock':['Enganche del receptor','Verrouillage du récepteur'],'Thrusters':['Propulsores','Propulseurs'],'Instrument bay':['Bahía de instrumentos','Baie d’instruments'],'Bus power':['Potencia del bus','Puissance du bus'],'Bus voltage':['Voltaje del bus','Tension du bus'],'Load margin':['Margen de carga','Marge de charge'],'Pointing error':['Error de apuntado','Erreur de pointage'],'Exposure':['Exposición','Exposition'],'Compressed size':['Tamaño comprimido','Taille compressée'],'Electron density':['Densidad electrónica','Densité électronique'],'Air temperature':['Temperatura del aire','Température de l’air'],'Air pressure':['Presión del aire','Pression de l’air']};
+'Flight computer':['Computadora de vuelo','Ordinateur de bord'],'Attitude control':['Control de actitud','Contrôle d’attitude'],'Receiver lock':['Enganche del receptor','Verrouillage du récepteur'],'Thrusters':['Propulsores','Propulseurs'],'Instrument bay':['Bahía de instrumentos','Baie d’instruments'],'Bus power':['Potencia del bus','Puissance du bus'],'Bus voltage':['Voltaje del bus','Tension du bus'],'Load margin':['Margen de carga','Marge de charge'],'Pointing error':['Error de apuntado','Erreur de pointage'],'Exposure':['Exposición','Exposition'],'Compressed size':['Tamaño comprimido','Taille compressée'],'Electron density':['Densidad electrónica','Densité électronique'],'Air temperature':['Temperatura del aire','Température de l’air'],'Air pressure':['Presión del aire','Pression de l’air'],'Historic mission (training replay)':['Misión histórica (repetición de entrenamiento)','Mission historique (rejeu d’entraînement)'],'Dust opacity (tau)':['Opacidad por polvo (tau)','Opacité due à la poussière (tau)'],'Saturn':['Saturno','Saturne'],'Frame compressed and stored.':['Imagen comprimida y guardada.','Image compressée et stockée.']};
 const t=(s,...a)=>{let r=(TR[s]&&TR[s][LG-1])||s;a.forEach((v,i)=>r=r.replace('{'+i+'}',v));return r};
 const lt=(p,t)=>au(p,t)*AUKM/C*1e3;           /* one-way light time, ms */
 const cmdOf=id=>COMMANDS.find(c=>c.id==id),P=()=>PROBES[sel];
 const unavail=(p,c)=>c.sci&&(!p.cmd[c.id]||!p.inst[p.cmd[c.id].i][1]);
 const reads=r=>r.map(([l,a,b,u,d])=>[t(l),F(R(a,b),d),u]);
+/* Procedural thumbnail of what each probe's camera would see (no external images allowed) */
+function thumb(id){const c=document.createElement('canvas'),w=c.width=176,h=c.height=110,g=c.getContext('2d'),rn=Math.random;
+ const bg=(a,b,y0=0,y1=h)=>{const q=g.createLinearGradient(0,y0,0,y1);q.addColorStop(0,a);q.addColorStop(1,b);g.fillStyle=q;g.fillRect(0,y0,w,y1-y0)},
+ st=n=>{g.fillStyle='#fff';for(let i=0;i<n;i++){g.globalAlpha=.3+rn()*.7;g.fillRect(rn()*w,rn()*h,1,1)}g.globalAlpha=1},
+ ci=(x,y,r,f)=>{g.fillStyle=f;g.beginPath();g.arc(x,y,r,0,6.3);g.fill()},
+ globe=(cx,cy,r,hue)=>{g.save();g.beginPath();g.arc(cx,cy,r,0,6.3);g.clip();for(let y=cy-r;y<cy+r;y+=5){g.fillStyle=`hsl(${hue+rn()*14},${35+rn()*25}%,${48+rn()*26}%)`;g.fillRect(cx-r,y,2*r,5)}const q=g.createRadialGradient(cx-r*.4,cy-r*.3,r*.2,cx,cy,r*1.1);q.addColorStop(0,'#0000');q.addColorStop(1,'#000c');g.fillStyle=q;g.fillRect(cx-r,cy-r,2*r,2*r);g.restore()};
+ const A=id=='nh'?'s':['ju','p10'].includes(id)?'j':['p11','ca'].includes(id)?'t':id=='lro'?'m':['pe','op'].includes(id)?'r':'c';
+ if(A=='s'){bg('#02030a','#050a18');st(150);ci(40+rn()*100,30+rn()*50,2.4,'#e6eeff')}
+ if(A=='j'){bg('#02030a','#02030a');st(40);globe(88,55,44,28);ci(130,40,2,'#e8dcc0')}
+ if(A=='t'){bg('#02030a','#02030a');st(40);globe(88,55,30,45);g.strokeStyle='#d8c9a0';[44,52,60].forEach(r=>{g.beginPath();g.ellipse(88,55,r,r*.28,-.25,0,6.3);g.stroke()})}
+ if(A=='m'){bg('#777','#8a8a8a');for(let i=0;i<26;i++){const x=rn()*w,y=rn()*h,r=3+rn()*13;ci(x,y,r,'#585858');ci(x-r*.15,y-r*.15,r*.82,'#9a9a9a')}}
+ if(A=='r'){bg('#dba67a','#efc9a0',0,62);g.fillStyle='#8f5a3c';g.beginPath();g.moveTo(0,62);for(let x=0;x<=w;x+=16)g.lineTo(x,50+rn()*12);g.lineTo(w,62);g.fill();bg('#b25a32','#7a3a20',62,h);for(let i=0;i<16;i++){const x=rn()*w,y=66+rn()*40,r=2+(y-62)/6;g.fillStyle='#4a2a1a';g.beginPath();g.ellipse(x,y,r*1.5,r,0,0,6.3);g.fill()}}
+ if(A=='c'){bg('#000','#000');const q=g.createRadialGradient(0,55,2,0,55,120);q.addColorStop(0,'#fff');q.addColorStop(.15,'#ffd9a0');q.addColorStop(1,'#0000');g.fillStyle=q;g.fillRect(0,0,w,h);g.strokeStyle='#ffe6c088';for(let i=0;i<9;i++){g.beginPath();g.moveTo(0,55);g.lineTo(w,20+i*8+rn()*10);g.stroke()}st(40)}
+ return c.toDataURL('image/jpeg',.7)}
 
 /* Runs on the probe when the command arrives; returns what it will downlink. */
 function execute(p,c){
@@ -184,7 +213,7 @@ function execute(p,c){
  if(c.sci&&x<.1)return err("Low power: load-shed inhibited instrument turn-on.");
  if(c.sci&&x<.13)return err("Instrument fault: no valid data. Retry suggested.");
  switch(c.id){
-  case"mag":case"plasma":case"rad":case"img":return ok(reads(k.r),0,c.id=="img"?"Frame compressed and stored; thumbnail not simulated.":"");
+  case'mag':case'plasma':case'rad':case'img':return Object.assign(ok(reads(k.r),0,c.id=='img'?'Frame compressed and stored.':''),c.id=='img'?{img:thumb(p.id)}:{});
   case'temp':return ok(reads(k&&k.r?k.r:[['Bus',...bus.T,'°C',1],['Instrument bay',bus.T[0]+4,bus.T[1]+4,'°C',1]]));
   case'press':return ok(reads(k&&k.r?k.r:[['Tank pressure',...bus.P,'kPa',0]]));
   case"power":{const w=R(...bus.W);return ok([[t('Bus power'),F(w,1),'W'],[t('Bus voltage'),F(R(27.2,29.8)),'V'],[t('Load margin'),F(R(1,14),1),'W']],{pw:w})}
@@ -208,7 +237,7 @@ function step(){ /* advance every in-flight command through uplink → execute �
   if(m.ph==2&&sim>=m.tDn){m.ph=3;const r=m.res;Object.assign(m.p.kn,r.fx);
    let s=`<b>#${m.n} ◀ ${m.p.name} · ${t(m.c.label)} · ${r.h}</b> (${t('round trip')} ${dur((m.tDn-m.t0)/1e3)})`;
    if(r.lines)s+="\n"+r.lines.map(([l,v,u])=>"   "+l.padEnd(20)+v+" "+u).join("\n");
-   if(r.m)s+="\n   "+r.m;log(r.t,s,m.tDn)}
+   if(r.m)s+="\n   "+r.m;if(r.img)s+='<br><img src="'+r.img+'" width=176 height=110 alt="" style="border-radius:6px;margin-top:4px;display:block">';log(r.t,s,m.tDn)}
  }
  Q=Q.filter(m=>m.ph<3);
 }
@@ -236,7 +265,7 @@ $("w").oninput=()=>{warp=WARPS[$("w").value];ui()};
 addEventListener("keydown",e=>{
  if(!$("ov").hidden){if(e.key=="Escape")closeOv();if(e.key=="Enter"){e.preventDefault();yes()}return}
  if(e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key.toUpperCase();
- if(k>="1"&&k<=String(PROBES.length))choose(+k-1);
+ if(k>='1'&&k<='9'&&+k<=PROBES.length)choose(+k-1);
  else if(k=="["||k=="]"){$("w").value=Math.max(0,Math.min(5,+$("w").value+(k=="]"?1:-1)));$("w").oninput()}
  else{const c=COMMANDS.find(c=>c.key==k);if(c){e.preventDefault();send(c.id)}}});
 
@@ -246,7 +275,7 @@ function ui(){
  $("cs").textContent="T+"+(el/86400|0)+"d "+hms(el%86400*1e3);
  $("cu").textContent="("+new Date(sim).toISOString().slice(0,16).replace("T"," ")+" UTC)";
  $("wv").textContent=num(warp)+"× (1 s = "+dur(warp)+")";
- PROBES.forEach((q,i)=>$("sd"+i).textContent=num(au(q,sim),1)+" AU · "+dur(lt(q,sim)/1e3).split(" ").slice(0,2).join(" "));
+ PROBES.forEach((q,i)=>{const s=dur(lt(q,sim)/1e3);$('sd'+i).textContent=num(au(q,sim),1)+' AU · '+s.split(' ').slice(0,2).join(' ');$('ld'+i).textContent=s;document.querySelectorAll('.ln')[i].classList.toggle('on',i==sel)});
  const row=(k,v)=>`<dt>${t(k)}</dt><dd>${v}</dd>`;
  $("st").innerHTML=row("Status",p.kn.safe?'<span style="color:var(--er)">'+t('SAFE MODE')+'</span>':t(p.status))+row("Distance",num(a,3)+" AU")+row("",num(a*AUKM)+" km")
   +row("One-way delay",dur(l))+row("Round trip",dur(2*l))+row("Range rate",(rr>=0?"+":"")+rr.toFixed(2)+" km/s")
@@ -261,9 +290,9 @@ function ui(){
 }
 function frame(now){
  sim+=Math.min(now-last,250)*warp;last=now;step();
- const p=P();$("pl").innerHTML=Q.filter(m=>m.p===p).map(m=>{
+ const LN={};Q.map(m=>{
   const x=m.ph==0?Math.min(1,(sim-m.t0)/m.up):m.ph==1?1:1-Math.min(1,(sim-m.tEx)/m.dn);
-  return m.x=x,`<i class="pl ${['u','x','d'][m.ph]}" style="left:${x*100}%"></i>`}).join('');drawSys();
+  m.x=x;LN[m.p.id]=(LN[m.p.id]||'')+`<i class="pl ${['u','x','d'][m.ph]}" style="left:${x*100}%"></i>`});PROBES.forEach(q=>{const e=$('t_'+q.id);if(e)e.innerHTML=LN[q.id]||''});drawSys();
  requestAnimationFrame(frame)}
 /* Solar system view: 2D top-down or tilted 3D (drag to rotate); radial sqrt scale */
 let yaw=.6,m3=1,drag=0,lx=0;
@@ -274,12 +303,13 @@ function drawSys(){
  const pj=v=>{const r=Math.hypot(v[0],v[1])||1e-9,s=sq(r)/r,x=v[0]*s,y=v[1]*s,z=Math.sign(v[2])*sq(Math.abs(v[2])),c=Math.cos(ya),n=Math.sin(ya),x2=x*c-y*n,y2=x*n+y*c,y3=y2*Math.cos(T)-z*Math.sin(T),k=m3?1/(1-(y2*Math.sin(T)+z*Math.cos(T))*.3):1;return[w/2+x2*Rr*k,h/2+y3*Rr*k]};
  const dot=(v,c,s,lb)=>{const[x,y]=pj(v);g.fillStyle=c;g.beginPath();g.arc(x,y,s,0,6.3);g.fill();if(lb){g.fillStyle=cl('--mu');g.font='11px system-ui';g.fillText(lb,x+s+3,y+3)}return[x,y]};
  g.strokeStyle=cl('--ln');[1,1.524,5.2,9.58,19.2,30.1].forEach(r=>{g.beginPath();for(let i=0;i<=64;i++){const[x,y]=pj(pol(r,i/64*6.2832));i?g.lineTo(x,y):g.moveTo(x,y)}g.stroke()});
- dot([0,0,0],'#ffc844',5);dot(E(sim),cl('--ac'),3,t('Earth'));dot(pol(1.524,(290+dy(sim)*.52408)*dg),cl('--er'),2.5,t('Mars'));dot(pol(5.2,(110+dy(sim)*.0831)*dg),cl('--wn'),3.5,t('Jupiter'));
- PROBES.forEach((p,i)=>dot(hel(p,sim),i==sel?cl('--ok'):cl('--mu'),i==sel?4:2.5,i==sel?p.name:''));
+ dot([0,0,0],'#ffc844',5);dot(E(sim),cl('--ac'),3,t('Earth'));dot(pol(1.524,(290+dy(sim)*.52408)*dg),cl('--er'),2.5,t('Mars'));dot(pol(5.2,(110+dy(sim)*.0831)*dg),cl('--wn'),3.5,t('Jupiter'));dot(pol(9.58,(2+dy(sim)*.03346)*dg),cl('--mu'),3,t('Saturn'));
+ PROBES.forEach((p,i)=>dot(hel(p,sim),i==sel?cl('--ok'):cl('--mu'),i==sel?4:2.5,p.name));
  const a=pj(E(sim)),b=pj(hel(P(),sim));g.setLineDash([4,4]);g.strokeStyle=cl('--ok');g.beginPath();g.moveTo(...a);g.lineTo(...b);g.stroke();g.setLineDash([]);
  Q.filter(m=>m.p===P()).forEach(m=>{g.fillStyle=cl(['--sn','--wn','--ok'][m.ph]);g.beginPath();g.arc(a[0]+(b[0]-a[0])*m.x,a[1]+(b[1]-a[1])*m.x,4,0,6.3);g.fill()})}
 $('b2').onclick=()=>m3=0;$('b3').onclick=()=>m3=1;
 $('sys').onpointerdown=e=>{drag=1;lx=e.clientX};addEventListener('pointerup',()=>drag=0);$('sys').onpointermove=e=>{if(drag&&m3){yaw+=(e.clientX-lx)*.01;lx=e.clientX}};
+$('lanes').innerHTML=PROBES.map((p,i)=>`<div class="ln" data-i="${i}"><span>${p.name}</span><div class="tr" id="t_${p.id}"></div><small id="ld${i}"></small></div>`).join('');$('lanes').onclick=e=>{const r=e.target.closest('.ln');if(r)choose(+r.dataset.i)};
 $('lg').selectedIndex=LG;$('lg').onchange=()=>{LG=$('lg').selectedIndex;xl()};xl();$("w").oninput();setInterval(ui,250);requestAnimationFrame(frame);
 log('sys',t('Console online. Light covers 1 AU in about 8m 19s, so every command waits for its uplink and downlink.'));
 log('sys',t('Pick a probe, send a command, and raise the time warp to skip the wait. Queue as many as you like.'));
